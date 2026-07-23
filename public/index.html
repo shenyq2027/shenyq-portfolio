@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>申雨茜 | 投放策略产品个人作品集</title>
+  <meta name="description" content="申雨茜 · 商业化投放策略产品人 · 个人作品集官网" />
+
+  <!-- ===== 免费无版权字体：衬线手写(标题) + 无衬线细体(正文) ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- ===== Tailwind CSS v3 (CDN) ===== -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    /* Tailwind 配置：严格注入 PRD 指定色值与字体，禁止自定义颜色 */
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas:    '#F6F3EF', // 画布基底 米白
+            ink:       '#7A8FA6', // 主油墨蓝
+            clay:      '#C9B8B2', // 柔粉棕
+            data:      '#966B67', // 数据高亮
+            // 页面辅色
+            apricot:   '#E6D5C9', // 页面一 暖杏
+            mint:      '#B8D0C9', // 页面二 薄荷绿
+            seasalt:   '#B4C8D9', // 页面三 海盐蓝
+            charcoal:  '#94999E', // 页面四 浅炭灰
+            // 文字色
+            title:     '#3A3F44', // 一级标题
+            body:      '#595F66', // 正文
+            note:      '#777C82', // 备注小字
+          },
+          fontFamily: {
+            hand:  ['"Ma Shan Zheng"', '"Noto Serif SC"', 'serif'], // 手写油画标题
+            serif: ['"Noto Serif SC"', 'serif'],                     // 衬线副标题
+            sans:  ['"Noto Sans SC"', 'sans-serif'],                 // 细体正文
+          },
+          transitionTimingFunction: {
+            soft: 'cubic-bezier(0.22, 0.61, 0.36, 1)', // 舒缓缓动，无回弹
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* =========================================================
+       全局基础
+    ========================================================= */
+    :root {
+      --texture-strength: 45;  /* 油画肌理强度 0-100，由滑块控制 */
+      --softlight: 0;          /* 柔光弱化开关 0/1 */
+    }
+    * { -webkit-font-smoothing: antialiased; }
+    html, body { height: 100%; }
+    body {
+      background-color: #F6F3EF;
+      color: #595F66;
+      font-family: '"Noto Sans SC"', sans-serif;
+      overflow: hidden; /* 主区域内部滚动 */
+    }
+
+    /* =========================================================
+       油画画布颗粒肌理（CSS 渐变 + 滤镜模拟，强度可调）
+    ========================================================= */
+    #canvas-texture {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      /* 多层细腻噪点，用 radial-gradient 模拟颗粒 */
+      background-image:
+        radial-gradient(rgba(122,143,166,0.10) 1px, transparent 1.4px),
+        radial-gradient(rgba(150,107,103,0.08) 1px, transparent 1.4px);
+      background-size: 4px 4px, 7px 7px;
+      background-position: 0 0, 2px 3px;
+      mix-blend-mode: multiply;
+      opacity: calc(var(--texture-strength) / 100);
+      transition: opacity 500ms ease;
+    }
+    /* 柔光弱化蒙版：降低整体高光，护眼 */
+    #softlight-veil {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background: #6b5f57;
+      mix-blend-mode: multiply;
+      opacity: calc(var(--softlight) * 0.14);
+      transition: opacity 600ms ease;
+    }
+
+    /* =========================================================
+       鼠标跟随·淡水彩流体层（顶层，低速晕染）
+    ========================================================= */
+    #fluid-layer {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      overflow: hidden;
+    }
+    .fluid-blob {
+      position: absolute; width: 340px; height: 340px; border-radius: 50%;
+      background: radial-gradient(circle at 40% 40%, rgba(122,143,166,0.20), rgba(201,184,178,0.10) 55%, transparent 72%);
+      filter: blur(26px);
+      transform: translate(-50%, -50%);
+      transition: left 1200ms cubic-bezier(0.22,0.61,0.36,1), top 1200ms cubic-bezier(0.22,0.61,0.36,1);
+      mix-blend-mode: multiply;
+    }
+
+    /* =========================================================
+       手绘油墨圆角边框 + hover 油墨扩散阴影
+    ========================================================= */
+    .oil-card {
+      background: rgba(255,255,255,0.42);
+      border: 1.5px solid rgba(122,143,166,0.35);
+      border-radius: 22px 20px 24px 18px / 20px 24px 18px 22px; /* 手绘不规则圆角 */
+      box-shadow: 0 6px 22px rgba(122,143,166,0.10), inset 0 0 0 1px rgba(255,255,255,0.35);
+      transition: transform 500ms cubic-bezier(0.22,0.61,0.36,1), box-shadow 500ms ease, border-color 500ms ease;
+      backdrop-filter: blur(2px);
+    }
+    .oil-card:hover {
+      transform: translateY(-4px) scale(1.012); /* 轻微放大 */
+      box-shadow: 0 16px 40px rgba(122,143,166,0.22), 0 0 0 2px rgba(150,107,103,0.14);
+      border-color: rgba(150,107,103,0.42); /* 油墨扩散 */
+    }
+
+    /* =========================================================
+       区块滚动入场：上浮淡入 800ms 无回弹
+    ========================================================= */
+    .reveal { opacity: 0; transform: translateY(26px); }
+    .reveal.in {
+      opacity: 1; transform: translateY(0);
+      transition: opacity 800ms cubic-bezier(0.22,0.61,0.36,1), transform 800ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+
+    /* =========================================================
+       页面切换：画布平移淡入蒙版过渡
+    ========================================================= */
+    .page { display: none; }
+    .page.active {
+      display: block;
+      animation: pageIn 700ms cubic-bezier(0.22,0.61,0.36,1) both;
+    }
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateX(28px); filter: blur(3px); }
+      to   { opacity: 1; transform: translateX(0);   filter: blur(0); }
+    }
+
+    /* =========================================================
+       左侧导航·油画笔触
+    ========================================================= */
+    .nav-item {
+      position: relative; cursor: pointer;
+      transition: color 400ms ease, background 400ms ease, transform 400ms ease;
+    }
+    .nav-item .brush {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 5px; border-radius: 4px;
+      background: linear-gradient(#7A8FA6, #966B67);
+      opacity: 0; transform: scaleY(0.3); transform-origin: center;
+      transition: opacity 400ms ease, transform 400ms ease;
+    }
+    .nav-item:hover { background: rgba(201,184,178,0.20); } /* hover 油墨晕染 */
+    .nav-item.active { color: #7A8FA6; background: rgba(122,143,166,0.12); }
+    .nav-item.active .brush { opacity: 1; transform: scaleY(1); }
+
+    /* 自定义细滑块样式 */
+    input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 4px; background: rgba(122,143,166,0.30); outline: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #7A8FA6; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.15); transition: background .3s; }
+    input[type="range"]::-webkit-slider-thumb:hover { background: #966B67; }
+
+    /* 主内容区独立滚动 + 隐藏滚动条视觉 */
+    #main-scroll { scrollbar-width: thin; scrollbar-color: rgba(122,143,166,0.4) transparent; }
+    #main-scroll::-webkit-scrollbar { width: 7px; }
+    #main-scroll::-webkit-scrollbar-thumb { background: rgba(122,143,166,0.35); border-radius: 8px; }
+
+    /* =========================================================
+       页面一 · 专属样式
+    ========================================================= */
+    .p1-tab { color:#777C82; }
+    .p1-tab.active { background:#7A8FA6; color:#fff; box-shadow:0 4px 12px rgba(122,143,166,0.30); }
+    .p1-tab:not(.active):hover { background:rgba(122,143,166,0.14); color:#595F66; }
+
+    /* 卡片过滤：非选中时淡出收起 */
+    .p1-card { transition: opacity 500ms ease, transform 500ms cubic-bezier(0.22,0.61,0.36,1), filter 500ms ease; }
+    .p1-card.dimmed { opacity:0.28; filter:grayscale(0.4); transform:scale(0.97); }
+
+    /* 技能调色条 */
+    .skill-row .bar-track { height:9px; border-radius:6px; background:rgba(122,143,166,0.14); overflow:hidden; }
+    .skill-row .bar-fill { height:100%; border-radius:6px; width:0; transition:width 1100ms cubic-bezier(0.22,0.61,0.36,1); }
+
+    /* 荣誉标签 chip */
+    .skill-chip {
+      font-family:'"Noto Sans SC"',sans-serif; font-size:12px; color:#966B67;
+      padding:5px 12px; border-radius:14px 12px 15px 11px;
+      background:rgba(150,107,103,0.10); border:1px solid rgba(150,107,103,0.28);
+      transition: background 400ms ease, transform 400ms ease;
+    }
+    .skill-chip:hover { background:rgba(150,107,103,0.20); transform:translateY(-2px); }
+
+    /* 生活照 油画相框 */
+    .photo-frame {
+      border-radius:14px 12px 15px 11px; overflow:hidden;
+      border:1px solid rgba(150,107,103,0.30);
+      box-shadow:0 6px 16px rgba(122,143,166,0.20);
+      background:rgba(230,213,201,0.4);
+    }
+    .photo-frame img {
+      width:100%; height:150px; object-fit:cover; display:block;
+      filter:saturate(0.92) contrast(0.98);
+      transition:transform 600ms cubic-bezier(0.22,0.61,0.36,1), filter 600ms ease;
+    }
+    .photo-frame:hover img { transform:scale(1.05); filter:saturate(1) contrast(1); }
+
+    /* =========================================================
+       页面二 · 图片轮播专属样式
+    ========================================================= */
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .carousel-viewport {
+      position: relative;
+      aspect-ratio: 16/10;
+      overflow: hidden;
+      border-radius: 22px 20px 24px 18px / 20px 24px 18px 22px;
+      background: rgba(184,208,201,0.25);
+      border: 1.5px solid rgba(184,208,201,0.45);
+      box-shadow: 0 12px 40px rgba(184,208,201,0.25);
+    }
+    .carousel-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      display: flex;
+      transition: transform 600ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+    .carousel-slide {
+      flex-shrink: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .carousel-slide img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 16px 14px 18px 12px;
+      box-shadow: 0 8px 28px rgba(122,143,166,0.22);
+      transition: transform 500ms cubic-bezier(0.22,0.61,0.36,1), filter 500ms ease;
+    }
+    .carousel-slide.active img {
+      filter: saturate(1) contrast(1);
+    }
+    .carousel-slide:not(.active) img {
+      filter: saturate(0.85) contrast(0.95);
+    }
+    /* 文字型 slide（其他常用AI工具） */
+    .carousel-slide.text-slide {
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 32px 40px;
+    }
+    .text-slide-content {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+    .text-slide-title {
+      font-family: 'Ma Shan Zheng', 'Noto Serif SC', serif;
+      font-size: 34px;
+      color: #3A3F44;
+      letter-spacing: 2px;
+      position: relative;
+      padding-bottom: 14px;
+    }
+    .text-slide-title::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #7A8FA6, transparent);
+    }
+    .text-slide-tools {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .text-slide-tool {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 17px;
+      color: #595F66;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .text-slide-tool .check {
+      color: #5f8073;
+      font-weight: 600;
+    }
+    .text-slide-tool .tool-note {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 12px;
+      color: #777C82;
+      margin-left: 4px;
+    }
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 52px;
+      height: 52px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 6px 18px rgba(122,143,166,0.25);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 400ms cubic-bezier(0.22,0.61,0.36,1);
+      z-index: 10;
+    }
+    .carousel-nav:hover {
+      background: rgba(255,255,255,0.95);
+      transform: translateY(-50%) scale(1.08);
+      box-shadow: 0 10px 28px rgba(122,143,166,0.35);
+    }
+    .carousel-nav svg {
+      width: 20px;
+      height: 20px;
+      stroke: #7A8FA6;
+      stroke-width: 1.8;
+    }
+    .carousel-nav.prev { left: -26px; }
+    .carousel-nav.next { right: -26px; }
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .carousel-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(184,208,201,0.8);
+      background: rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: all 400ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+    .carousel-dot.active {
+      background: #7A8FA6;
+      border-color: #7A8FA6;
+      transform: scale(1.3);
+      box-shadow: 0 0 0 4px rgba(122,143,166,0.15);
+    }
+    .carousel-dot:hover {
+      background: rgba(122,143,166,0.4);
+      border-color: rgba(122,143,166,0.6);
+    }
+    .carousel-caption {
+      text-align: center;
+      margin-top: 18px;
+    }
+    .carousel-caption .caption-name {
+      font-family: 'Ma Shan Zheng', 'Noto Serif SC', serif;
+      font-size: 28px;
+      color: #3A3F44;
+      margin-bottom: 6px;
+    }
+    .carousel-caption .caption-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 14px;
+      color: #777C82;
+    }
+    .carousel-counter {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 12px;
+      color: rgba(122,143,166,0.6);
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(4px);
+      padding: 6px 12px;
+      border-radius: 14px;
+    }
+    @media (max-width: 768px) {
+      .carousel-nav {
+        width: 44px;
+        height: 44px;
+      }
+      .carousel-nav.prev { left: -22px; }
+      .carousel-nav.next { right: -22px; }
+      .carousel-caption .caption-name { font-size: 22px; }
+      .carousel-caption .caption-desc { font-size: 12px; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 油画肌理 & 柔光 & 流体层 -->
+  <div id="canvas-texture"></div>
+  <div id="softlight-veil"></div>
+  <div id="fluid-layer"><div class="fluid-blob" id="fluidBlob"></div></div>
+
+  <!-- ================= 左侧固定导航 ================= -->
+  <nav class="fixed left-0 top-0 h-full w-60 z-20 flex flex-col justify-center px-5"
+       style="background: linear-gradient(180deg, rgba(246,243,239,0.92), rgba(230,213,201,0.55)); border-right:1.5px solid rgba(122,143,166,0.25); backdrop-filter: blur(4px);">
+    <div class="mb-10 pl-3">
+      <div class="font-hand text-3xl text-title leading-tight">申雨茜</div>
+      <div class="font-sans text-xs text-note mt-2 leading-relaxed">
+        邮箱：shenyq2027@163.com<br />电话：189-7830-3412
+      </div>
+      <div class="mt-3 h-px w-16" style="background:linear-gradient(90deg,#966B67,transparent);"></div>
+    </div>
+
+    <ul class="flex flex-col gap-2" id="navList">
+      <li class="nav-item active rounded-xl px-4 py-3" data-target="page-1">
+        <span class="brush"></span>
+        <div class="font-serif text-base text-title">页面一</div>
+        <div class="font-sans text-xs text-note mt-0.5">我的基础信息</div>
+      </li>
+      <li class="nav-item rounded-xl px-4 py-3 text-body" data-target="page-2">
+        <span class="brush"></span>
+        <div class="font-serif text-base">页面二</div>
+        <div class="font-sans text-xs text-note mt-0.5">我对AI的探索</div>
+      </li>
+      <li class="nav-item rounded-xl px-4 py-3 text-body" data-target="page-3">
+        <span class="brush"></span>
+        <div class="font-serif text-base">页面三</div>
+        <div class="font-sans text-xs text-note mt-0.5">我的实习经历</div>
+      </li>
+    </ul>
+
+    <div class="mt-10 pl-4 font-sans text-[11px] text-note leading-relaxed">
+      2027届 · 金融学本科<br />即刻到岗 · 6个月高质量实习
+    </div>
+  </nav>
+
+  <!-- ================= 主内容区 ================= -->
+  <main id="main-scroll" class="relative z-10 ml-60 h-screen overflow-y-auto px-10 lg:px-16 xl:px-24 py-12">
+
+    <!-- ============ 页面一 ｜ 我的基础信息 ============ -->
+    <section id="page-1" class="page active max-w-6xl mx-auto">
+      <!-- 页头 -->
+      <div class="reveal mb-8">
+        <div class="flex items-end gap-4">
+          <h1 class="font-hand text-5xl text-title leading-none">我的基础信息</h1>
+          <span class="font-serif text-note text-sm mb-1">/ Basic Profile</span>
+        </div>
+        <p class="font-sans text-body mt-3 max-w-2xl leading-relaxed">
+          一位以策略为笔、以数据为墨的投放策略产品人。
+        </p>
+        <div class="mt-4 h-px w-full" style="background:linear-gradient(90deg,#966B67,rgba(150,107,103,0.05));"></div>
+      </div>
+
+      <!-- 顶部 Tab 切换 -->
+      <div class="reveal mb-8">
+        <div class="inline-flex gap-1 p-1 rounded-2xl" style="background:rgba(230,213,201,0.45);border:1px solid rgba(122,143,166,0.22);">
+          <button class="p1-tab px-5 py-2 rounded-xl font-serif text-sm transition" data-tab="all">全部概览</button>
+          <button class="p1-tab px-5 py-2 rounded-xl font-serif text-sm transition" data-tab="identity">身份意向</button>
+          <button class="p1-tab px-5 py-2 rounded-xl font-serif text-sm transition" data-tab="skill">荣誉技能</button>
+          <button class="p1-tab px-5 py-2 rounded-xl font-serif text-sm transition" data-tab="contact">联系方式</button>
+        </div>
+      </div>
+
+      <!-- 三张信息卡片 横向平铺 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- 卡片1 身份意向 -->
+        <div class="p1-card reveal oil-card p-6 flex flex-col" data-card="identity">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(122,143,166,0.16);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <h3 class="font-serif text-lg text-title">身份与意向</h3>
+          </div>
+          <ul class="font-sans text-sm text-body space-y-3 leading-relaxed flex-1">
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">姓名</span><span>申雨茜</span></li>
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">院校</span><span>金融学 本科 · 2027届</span></li>
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">意向</span><span>投放策略产品人 / 增长策略产品</span></li>
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">到岗</span><span>即刻到岗 · 可实习 6 个月以上</span></li>
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">城市</span><span>北京 / 上海 / 深圳（可协商）</span></li>
+          </ul>
+          <div class="mt-5 pt-4 font-hand text-data text-lg" style="border-top:1px dashed rgba(150,107,103,0.3);">
+            “把复杂的投放，画成一张看得懂的图。”
+          </div>
+        </div>
+
+        <!-- 卡片2 荣誉技能调色盘 -->
+        <div class="p1-card reveal oil-card p-6 flex flex-col" data-card="skill">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(150,107,103,0.16);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#966B67" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2 2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-11-10z"/></svg>
+            </span>
+            <h3 class="font-serif text-lg text-title">荣誉与技能调色盘</h3>
+          </div>
+
+          <div class="mb-4">
+            <div class="font-sans text-xs text-note mb-2">核心技能（占比越高，色块越浓）</div>
+            <div class="space-y-2.5" id="skillBars"></div>
+          </div>
+
+          <div class="mt-auto">
+            <div class="font-sans text-xs text-note mb-2">荣誉标签</div>
+            <div class="flex flex-wrap gap-2">
+              <span class="skill-chip">校级奖学金 ×2</span>
+              <span class="skill-chip">挑战杯 2023 国家级结项</span>
+              <span class="skill-chip">快消外企春招项目 PM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片3 联系方式 + PDF 下载 -->
+        <div class="p1-card reveal oil-card p-6 flex flex-col" data-card="contact">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(184,208,201,0.35);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f8073" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </span>
+            <h3 class="font-serif text-lg text-title">联系方式</h3>
+          </div>
+
+          <ul class="font-sans text-sm text-body space-y-3 leading-relaxed flex-1">
+            <li class="flex items-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" fill="none"/><path d="M22 6l-10 7L2 6"/></svg>
+              <span>shenyq2027@163.com</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>189-7830-3412</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span>微信 / WeChat: 189-7830-3412</span>
+            </li>
+          </ul>
+
+          <!-- 生活照 · 双图 -->
+          <div class="mt-5 grid grid-cols-2 gap-3">
+            <figure class="photo-frame">
+              <img src="/photos/tianchi.jpg" alt="申雨茜在长白山天池的生活照" loading="lazy" />
+            </figure>
+            <figure class="photo-frame">
+              <img src="/photos/ferriswheel.jpg" alt="申雨茜在摩天轮前的生活照" loading="lazy" />
+            </figure>
+          </div>
+
+          <a id="downloadPdf" href="/resume.pdf" download="申雨茜-简历.pdf"
+             class="mt-5 inline-flex items-center justify-center gap-2 py-3 rounded-xl font-serif text-sm text-white transition"
+             style="background:#7A8FA6;box-shadow:0 6px 16px rgba(122,143,166,0.35);">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            下载简历 PDF
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页面二 ｜ 我对AI的探索 -->
+    <section id="page-2" class="page max-w-6xl mx-auto">
+      <div class="reveal mb-8">
+        <div class="flex items-end gap-4">
+          <h1 class="font-hand text-5xl text-title leading-none">我对AI的探索</h1>
+          <span class="font-serif text-note text-sm mb-1">/ AI Exploration</span>
+        </div>
+        <p class="font-sans text-body mt-3 max-w-2xl leading-relaxed">
+          在AI浪潮中，我尝试用不同工具探索创意与效率的边界。
+        </p>
+        <div class="mt-4 h-px w-full" style="background:linear-gradient(90deg,#5f8073,rgba(95,128,115,0.05));"></div>
+      </div>
+
+      <div class="reveal">
+        <div class="carousel-container">
+          <button class="carousel-nav prev" id="carouselPrev" aria-label="上一张">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="carousel-nav next" id="carouselNext" aria-label="下一张">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+
+          <div class="carousel-viewport">
+            <div class="carousel-counter" id="carouselCounter">1 / 6</div>
+            <div class="carousel-track" id="carouselTrack"></div>
+          </div>
+
+          <div class="carousel-dots" id="carouselDots"></div>
+
+          <div class="carousel-caption" id="carouselCaption">
+            <div class="caption-name" id="captionName"></div>
+            <div class="caption-desc" id="captionDesc"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal mt-12">
+        <div class="oil-card p-6" style="border-color:rgba(184,208,201,0.45);background:rgba(184,208,201,0.12);">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(184,208,201,0.4);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5f8073" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </span>
+            <h3 class="font-serif text-base text-title">探索心得</h3>
+          </div>
+          <p class="font-sans text-sm text-body leading-relaxed">
+            AI工具不仅是效率提升的利器，更是激发创意的催化剂。从设计到开发，从数据分析到内容创作，AI正在重塑我们解决问题的方式。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页面三 ｜ 我的实习经历 -->
+    <section id="page-3" class="page max-w-6xl mx-auto">
+      <!-- 页头 -->
+      <div class="reveal mb-8">
+        <div class="flex items-end gap-4">
+          <h1 class="font-hand text-5xl text-title leading-none">我的实习经历</h1>
+          <span class="font-serif text-note text-sm mb-1">/ Internship</span>
+        </div>
+        <p class="font-sans text-body mt-3 max-w-2xl leading-relaxed">
+          以数据为墨，在出海商业化战场上绘制增长曲线。
+        </p>
+        <div class="mt-4 h-px w-full" style="background:linear-gradient(90deg,#5f7a91,rgba(95,122,145,0.05));"></div>
+      </div>
+
+      <!-- 公司信息卡片 -->
+      <div class="reveal mb-8">
+        <div class="oil-card p-6 flex flex-col lg:flex-row lg:items-center gap-5"
+             style="border-color:rgba(180,200,217,0.5);background:rgba(180,200,217,0.12);">
+          <div class="flex items-center gap-4 flex-1">
+            <span class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                  style="background:rgba(180,200,217,0.35);border:1px solid rgba(180,200,217,0.5);">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5f7a91" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>
+            </span>
+            <div>
+              <h2 class="font-serif text-xl text-title leading-tight">北京回旋加速网络科技有限公司</h2>
+              <div class="font-sans text-sm text-body mt-1">UG中心 · 广告策略运营（出海方向）</div>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.18);border-color:rgba(180,200,217,0.45);">2026.03 — 2026.06</span>
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.18);border-color:rgba(180,200,217,0.45);">TikTok / Kwai</span>
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.18);border-color:rgba(180,200,217,0.45);">菲律宾·印尼·墨西哥</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 基本陈述 -->
+      <div class="reveal mb-8">
+        <div class="oil-card p-6">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(180,200,217,0.3);">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5f7a91" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </span>
+            <h3 class="font-serif text-lg text-title">业务陈述</h3>
+          </div>
+          <p class="font-sans text-sm text-body leading-relaxed">
+            负责出海 AI 短剧、IAA/IAP 游戏的用户画像分析、竞价广告投放与商业化策略迭代，覆盖菲律宾、印尼、墨西哥三地区。具备数据驱动决策（归因分析、漏斗分析、留存分析）的策略思维，能从业务表象出发，建立「假设 → 验证 → 迭代」的策略工作闭环。
+          </p>
+        </div>
+      </div>
+
+      <!-- 主要职责 标题 -->
+      <div class="reveal mb-5">
+        <div class="flex items-center gap-3">
+          <span class="font-hand text-2xl text-data">主要职责</span>
+          <div class="flex-1 h-px" style="background:linear-gradient(90deg,rgba(150,107,103,0.3),rgba(150,107,103,0.05));"></div>
+        </div>
+      </div>
+
+      <!-- 四项核心职责 卡片 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <!-- 职责1 增长执行 -->
+        <div class="reveal oil-card p-6 flex flex-col">
+          <div class="flex items-start gap-3 mb-3">
+            <span class="font-hand text-3xl text-ink leading-none" style="color:#5f7a91;">01</span>
+            <div class="flex-1">
+              <div class="font-serif text-base text-title">增长执行</div>
+              <div class="font-sans text-xs text-note mt-0.5">ROI 北极星指标体系 · 流量增长方法论</div>
+            </div>
+          </div>
+          <p class="font-sans text-sm text-body leading-relaxed flex-1">
+            构建基于 ROI 的北极星指标体系（消耗/效率/留存），覆盖 3 地区 8 账号，实现 14 日 ROAS 稳定在 1.1 水平，沉淀「冷启动 → CAC 控制 → 稳定提升 ROAS」可复用 SOP。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-4 pt-4" style="border-top:1px dashed rgba(180,200,217,0.4);">
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.15);border-color:rgba(180,200,217,0.4);font-size:11px;">14日 ROAS 1.1</span>
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.15);border-color:rgba(180,200,217,0.4);font-size:11px;">3地区8账号</span>
+          </div>
+        </div>
+
+        <!-- 职责2 A/B测试 -->
+        <div class="reveal oil-card p-6 flex flex-col">
+          <div class="flex items-start gap-3 mb-3">
+            <span class="font-hand text-3xl text-ink leading-none" style="color:#5f7a91;">02</span>
+            <div class="flex-1">
+              <div class="font-serif text-base text-title">A/B 测试与策略迭代</div>
+              <div class="font-sans text-xs text-note mt-0.5">素材衰减判断 · 筛选优化</div>
+            </div>
+          </div>
+          <p class="font-sans text-sm text-body leading-relaxed flex-1">
+            以 CTR 趋势、受众池规模为信号判断素材衰减节点，制定「换素材 → 上新组 → 迁移预算」标准流程；通过 A/B 测试筛选优质素材 3 套，形成《效果广告素材选取优化策略》。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-4 pt-4" style="border-top:1px dashed rgba(180,200,217,0.4);">
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.15);border-color:rgba(180,200,217,0.4);font-size:11px;">平均 CTR +10%</span>
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.15);border-color:rgba(180,200,217,0.4);font-size:11px;">优质素材 3 套</span>
+          </div>
+        </div>
+
+        <!-- 职责3 异常拆解 -->
+        <div class="reveal oil-card p-6 flex flex-col">
+          <div class="flex items-start gap-3 mb-3">
+            <span class="font-hand text-3xl text-ink leading-none" style="color:#5f7a91;">03</span>
+            <div class="flex-1">
+              <div class="font-serif text-base text-title">异常情况拆解</div>
+              <div class="font-sans text-xs text-note mt-0.5">多维归因 · 快速响应</div>
+            </div>
+          </div>
+          <p class="font-sans text-sm text-body leading-relaxed flex-1">
+            建立广告效果多维归因体系，针对 ROAS 波动、CTR 骤降、付费率异常，拆解「素材衰减/受众饱和/出价竞争/平台算法波动」四类归因路径，制定快速响应 checklist。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-4 pt-4" style="border-top:1px dashed rgba(180,200,217,0.4);">
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.15);border-color:rgba(180,200,217,0.4);font-size:11px;">无效消耗 -25%</span>
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.15);border-color:rgba(180,200,217,0.4);font-size:11px;">四类归因路径</span>
+          </div>
+        </div>
+
+        <!-- 职责4 数据驱动 -->
+        <div class="reveal oil-card p-6 flex flex-col">
+          <div class="flex items-start gap-3 mb-3">
+            <span class="font-hand text-3xl text-ink leading-none" style="color:#5f7a91;">04</span>
+            <div class="flex-1">
+              <div class="font-serif text-base text-title">数据驱动方案优化</div>
+              <div class="font-sans text-xs text-note mt-0.5">反常识规律验证 · 策略推广</div>
+            </div>
+          </div>
+          <p class="font-sans text-sm text-body leading-relaxed flex-1">
+            使用核力引擎数据看板对比工作日与周末数据，发现并验证「周末流量用户结构偏移 → 付费率系统性下降」反常识规律，调整策略（周五加量/周末降速）并推广至全账户。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-4 pt-4" style="border-top:1px dashed rgba(180,200,217,0.4);">
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.15);border-color:rgba(180,200,217,0.4);font-size:11px;">反常识规律</span>
+            <span class="skill-chip" style="color:#5f7a91;background:rgba(180,200,217,0.15);border-color:rgba(180,200,217,0.4);font-size:11px;">全账户推广</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= 右下角常驻悬浮控制面板（可折叠） ================= -->
+  <div id="control-panel" class="fixed right-6 bottom-6 z-30">
+    <!-- 折叠时的圆形按钮 -->
+    <button id="panelToggle" aria-label="打开控制面板"
+      class="oil-card w-14 h-14 flex items-center justify-center text-ink hover:text-data"
+      style="border-radius:50%;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+
+    <!-- 展开面板 -->
+    <div id="panelBody" class="oil-card absolute right-0 bottom-16 w-72 p-5 origin-bottom-right hidden">
+      <div class="flex items-center justify-between mb-4">
+        <span class="font-serif text-title text-lg">舒缓控制台</span>
+        <button id="panelClose" class="text-note hover:text-data" aria-label="收起">✕</button>
+      </div>
+
+      <!-- 白噪音 -->
+      <div class="mb-5">
+        <div class="font-sans text-sm text-body mb-2">环境白噪音</div>
+        <div class="flex gap-2 mb-3">
+          <button class="noise-btn flex-1 py-2 rounded-xl text-xs font-sans border transition" data-noise="rain"
+            style="border-color:rgba(122,143,166,0.4);color:#595F66;">雨林细雨</button>
+          <button class="noise-btn flex-1 py-2 rounded-xl text-xs font-sans border transition" data-noise="cafe"
+            style="border-color:rgba(122,143,166,0.4);color:#595F66;">午后咖啡馆</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="muteBtn" class="text-ink hover:text-data" aria-label="静音">
+            <svg id="muteIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+          </button>
+          <input type="range" id="volume" min="0" max="100" value="0" class="flex-1" />
+          <span id="volLabel" class="font-sans text-xs text-note w-8 text-right">0</span>
+        </div>
+      </div>
+
+      <!-- 肌理强度 -->
+      <div class="mb-5">
+        <div class="flex justify-between font-sans text-sm text-body mb-2">
+          <span>油画肌理强度</span><span id="texLabel" class="text-note">45</span>
+        </div>
+        <input type="range" id="texture" min="0" max="100" value="45" class="w-full" />
+        <div class="flex justify-between font-sans text-[10px] text-note mt-1"><span>光滑</span><span>厚重颗粒</span></div>
+      </div>
+
+      <!-- 柔光开关 -->
+      <div class="flex items-center justify-between">
+        <span class="font-sans text-sm text-body">全局柔光护眼</span>
+        <button id="softlightBtn" role="switch" aria-checked="false"
+          class="relative w-12 h-6 rounded-full transition" style="background:rgba(122,143,166,0.3);">
+          <span id="softlightKnob" class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform" style="box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 隐藏音频元素（在线免费无版权环境音，阶段4接入音量控制） -->
+  <audio id="audio-rain" loop crossorigin="anonymous" preload="none"
+    src="https://cdn.pixabay.com/audio/2022/03/10/audio_2d0a2d3f0a.mp3"></audio>
+  <audio id="audio-cafe" loop crossorigin="anonymous" preload="none"
+    src="https://cdn.pixabay.com/audio/2021/08/09/audio_b1a7b1c7f9.mp3"></audio>
+
+  <script>
+    /* =========================================================
+       阶段2 · 全局交互脚本
+    ========================================================= */
+    const root = document.documentElement;
+
+    /* ---------- localStorage 参数缓存 ---------- */
+    const STORE_KEY = 'syq_portfolio_settings';
+    const settings = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    function saveSettings() { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); }
+
+    /* ---------- 页面切换 ---------- */
+    const navItems = document.querySelectorAll('.nav-item');
+    function showPage(targetId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const page = document.getElementById(targetId);
+      if (page) page.classList.add('active');
+      navItems.forEach(n => {
+        const on = n.dataset.target === targetId;
+        n.classList.toggle('active', on);
+        n.classList.toggle('text-body', !on);
+      });
+      // 重新触发入场动画
+      document.querySelectorAll('#' + targetId + ' .reveal').forEach((el, i) => {
+        el.classList.remove('in');
+        setTimeout(() => el.classList.add('in'), 60 + i * 90);
+      });
+      document.getElementById('main-scroll').scrollTop = 0;
+    }
+    navItems.forEach(n => n.addEventListener('click', () => showPage(n.dataset.target)));
+
+    /* ---------- 滚动入场观察 ---------- */
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+    }, { threshold: 0.12, root: document.getElementById('main-scroll') });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    /* ---------- 鼠标跟随水彩流体 ---------- */
+    const blob = document.getElementById('fluidBlob');
+    window.addEventListener('pointermove', e => {
+      blob.style.left = e.clientX + 'px';
+      blob.style.top  = e.clientY + 'px';
+    });
+
+    /* ---------- 控制面板 折叠/展开 ---------- */
+    const panelBody = document.getElementById('panelBody');
+    document.getElementById('panelToggle').addEventListener('click', () => panelBody.classList.toggle('hidden'));
+    document.getElementById('panelClose').addEventListener('click', () => panelBody.classList.add('hidden'));
+
+    /* ---------- 油画肌理强度 ---------- */
+    const texture = document.getElementById('texture'), texLabel = document.getElementById('texLabel');
+    function applyTexture(v) { root.style.setProperty('--texture-strength', v); texLabel.textContent = v; texture.value = v; }
+    texture.addEventListener('input', () => { applyTexture(texture.value); settings.texture = texture.value; saveSettings(); });
+    applyTexture(settings.texture ?? 45);
+
+    /* ---------- 柔光开关 ---------- */
+    const softBtn = document.getElementById('softlightBtn'), softKnob = document.getElementById('softlightKnob');
+    function applySoftlight(on) {
+      root.style.setProperty('--softlight', on ? 1 : 0);
+      softBtn.setAttribute('aria-checked', on);
+      softBtn.style.background = on ? '#7A8FA6' : 'rgba(122,143,166,0.3)';
+      softKnob.style.transform = on ? 'translateX(24px)' : 'translateX(0)';
+    }
+    softBtn.addEventListener('click', () => { const on = softBtn.getAttribute('aria-checked') !== 'true'; applySoftlight(on); settings.softlight = on; saveSettings(); });
+    applySoftlight(settings.softlight ?? false);
+
+    /* ---------- 白噪音（阶段4完整逻辑，此处基础接入） ---------- */
+    const audios = { rain: document.getElementById('audio-rain'), cafe: document.getElementById('audio-cafe') };
+    const volume = document.getElementById('volume'), volLabel = document.getElementById('volLabel');
+    const noiseBtns = document.querySelectorAll('.noise-btn');
+    let currentNoise = settings.noise || 'rain';
+    let isMuted = settings.muted ?? true;
+
+    function highlightNoise() {
+      noiseBtns.forEach(b => {
+        const on = b.dataset.noise === currentNoise;
+        b.style.background = on ? 'rgba(122,143,166,0.18)' : 'transparent';
+        b.style.borderColor = on ? '#7A8FA6' : 'rgba(122,143,166,0.4)';
+        b.style.color = on ? '#7A8FA6' : '#595F66';
+      });
+    }
+    function applyVolume() {
+      const v = isMuted ? 0 : (Number(volume.value) / 100);
+      Object.values(audios).forEach(a => a.volume = 0);
+      if (!isMuted && Number(volume.value) > 0) {
+        audios[currentNoise].volume = v;
+        audios[currentNoise].play().catch(() => {});
+      }
+      volLabel.textContent = isMuted ? 0 : volume.value;
+    }
+    noiseBtns.forEach(b => b.addEventListener('click', () => {
+      Object.values(audios).forEach(a => a.pause());
+      currentNoise = b.dataset.noise; settings.noise = currentNoise; saveSettings();
+      highlightNoise(); applyVolume();
+    }));
+    volume.addEventListener('input', () => { if (Number(volume.value) > 0) isMuted = false; settings.volume = volume.value; settings.muted = isMuted; saveSettings(); applyVolume(); });
+    document.getElementById('muteBtn').addEventListener('click', () => { isMuted = !isMuted; settings.muted = isMuted; saveSettings(); applyVolume(); });
+
+    volume.value = settings.volume ?? 0;
+    highlightNoise();
+    applyVolume();
+
+    /* =========================================================
+       页面一 · Tab 过滤 + 技能条动画
+    ========================================================= */
+    const skillData = [
+      { name:'投放策略设计',   val:92, color:'#7A8FA6' },
+      { name:'数据分析 / SQL',  val:85, color:'#966B67' },
+      { name:'AI 工具应用',     val:88, color:'#5f8073' },
+      { name:'需求文档 / PRD',  val:80, color:'#9a8fb0' },
+      { name:'增长实验设计',    val:76, color:'#c08a63' },
+    ];
+    const skillBars = document.getElementById('skillBars');
+    if (skillBars) {
+      skillBars.innerHTML = skillData.map(s => `
+        <div class="skill-row">
+          <div class="flex justify-between font-sans text-xs mb-1">
+            <span style="color:#595F66;">${s.name}</span>
+            <span style="color:#777C82;">${s.val}%</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" data-val="${s.val}" style="background:${s.color};"></div></div>
+        </div>`).join('');
+    }
+    function animateSkillBars() {
+      document.querySelectorAll('#skillBars .bar-fill').forEach((el, i) => {
+        el.style.width = '0';
+        setTimeout(() => { el.style.width = el.dataset.val + '%'; }, 150 + i * 120);
+      });
+    }
+
+    const p1Tabs = document.querySelectorAll('.p1-tab');
+    const p1Cards = document.querySelectorAll('.p1-card');
+    function setP1Tab(tab) {
+      p1Tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      p1Cards.forEach(c => {
+        const show = tab === 'all' || c.dataset.card === tab;
+        c.classList.toggle('dimmed', !show);
+      });
+    }
+    p1Tabs.forEach(t => t.addEventListener('click', () => setP1Tab(t.dataset.tab)));
+    setP1Tab('all');
+
+    /* =========================================================
+       页面二 · 图片轮播逻辑
+    ========================================================= */
+    const carouselData = [
+      { src: '/ai/canvas.png', name: '可画 Canvas', desc: 'AI驱动的在线设计工具，让创作更简单' },
+      { src: '/ai/coze.png', name: '扣子 Coze', desc: '快速构建智能体，释放AI生产力' },
+      { src: '/ai/feishu.png', name: '飞书智能助手', desc: '办公场景中的AI协作伙伴' },
+      { src: '/ai/ima.png', name: 'iMA', desc: 'AI驱动的多模态交互体验' },
+      { src: '/ai/jimeng.png', name: '即梦 Jimeng', desc: '字节跳动出品的AI创意工具' },
+      { src: '/ai/lingguang.jpg', name: '灵光 Lingguang', desc: 'AI辅助的灵感激发平台' },
+      {
+        type: 'text',
+        title: '其他常用 AI 工具',
+        tools: [
+          { name: 'Chat GPT' },
+          { name: 'Claude' },
+          { name: 'Gemini' },
+          { name: 'Runway' },
+          { name: 'Tabbit' },
+          { name: 'WorkBuddy' },
+          { name: 'trae', note: '此网页由trae、豆包、V0.dev共同完成' },
+        ],
+      },
+    ];
+
+    let carouselInitialized = false;
+    let currentSlide = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    function initCarousel() {
+      if (carouselInitialized) return;
+      carouselInitialized = true;
+
+      const track = document.getElementById('carouselTrack');
+      const dots = document.getElementById('carouselDots');
+      const counter = document.getElementById('carouselCounter');
+      const captionName = document.getElementById('captionName');
+      const captionDesc = document.getElementById('captionDesc');
+      const prevBtn = document.getElementById('carouselPrev');
+      const nextBtn = document.getElementById('carouselNext');
+
+      track.innerHTML = carouselData.map((item, i) => {
+        if (item.type === 'text') {
+          const toolsHtml = item.tools.map(t => {
+            const noteHtml = t.note ? `<span class="tool-note">（${t.note}）</span>` : '';
+            return `
+              <div class="text-slide-tool"><span class="check">√</span><span>${t.name}</span>${noteHtml}</div>
+            `;
+          }).join('');
+          return `
+            <div class="carousel-slide text-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+              <div class="text-slide-content">
+                <div class="text-slide-title">${item.title}</div>
+                <div class="text-slide-tools">${toolsHtml}</div>
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="carousel-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+            <img src="${item.src}" alt="${item.name}" loading="lazy" />
+          </div>
+        `;
+      }).join('');
+
+      dots.innerHTML = carouselData.map((_, i) => `
+        <span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>
+      `).join('');
+
+      function updateCarousel(index) {
+        currentSlide = index;
+        track.style.transform = `translateX(-${index * 100}%)`;
+
+        document.querySelectorAll('.carousel-slide').forEach((el, i) => {
+          el.classList.toggle('active', i === index);
+        });
+
+        document.querySelectorAll('.carousel-dot').forEach((el, i) => {
+          el.classList.toggle('active', i === index);
+        });
+
+        counter.textContent = `${index + 1} / ${carouselData.length}`;
+
+        const item = carouselData[index];
+        const captionEl = document.getElementById('carouselCaption');
+        if (item.type === 'text') {
+          captionEl.style.display = 'none';
+        } else {
+          captionEl.style.display = 'block';
+          captionName.textContent = item.name;
+          captionDesc.textContent = item.desc;
+        }
+      }
+
+      function nextSlide() {
+        const next = (currentSlide + 1) % carouselData.length;
+        updateCarousel(next);
+      }
+
+      function prevSlide() {
+        const prev = (currentSlide - 1 + carouselData.length) % carouselData.length;
+        updateCarousel(prev);
+      }
+
+      prevBtn.addEventListener('click', prevSlide);
+      nextBtn.addEventListener('click', nextSlide);
+
+      dots.addEventListener('click', (e) => {
+        const dot = e.target.closest('.carousel-dot');
+        if (dot) {
+          updateCarousel(Number(dot.dataset.index));
+        }
+      });
+
+      track.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      track.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) nextSlide();
+          else prevSlide();
+        }
+      }, { passive: true });
+
+      document.addEventListener('keydown', (e) => {
+        if (document.getElementById('page-2').classList.contains('active')) {
+          if (e.key === 'ArrowLeft') prevSlide();
+          if (e.key === 'ArrowRight') nextSlide();
+        }
+      });
+
+      updateCarousel(0);
+    }
+
+    function animateCarousel() {
+      if (!carouselInitialized) initCarousel();
+    }
+
+    // 切回页面一时重放技能条动画，页面二时初始化轮播
+    const _origShowPage = showPage;
+    showPage = function(id) {
+      _origShowPage(id);
+      if (id === 'page-1') setTimeout(animateSkillBars, 200);
+      if (id === 'page-2') setTimeout(animateCarousel, 200);
+    };
+
+    /* 首屏入场 */
+    showPage('page-1');
+  </script>
+</body>
+</html>

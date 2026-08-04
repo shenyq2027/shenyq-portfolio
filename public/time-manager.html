@@ -236,7 +236,7 @@
   .insight-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
   .insight-card h2{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
   .insight-row{display:flex;gap:10px;align-items:flex-start;margin-top:10px}
-  .insight-row textarea{flex:1;min-height:54px;line-height:1.6}
+  .insight-row textarea{flex:1;min-height:96px;line-height:1.7}
   .insight-cnt{font-size:11.5px;color:var(--muted-fg);align-self:center;white-space:nowrap;font-variant-numeric:tabular-nums}
   .insight-cnt.over{color:var(--warn)}
 
@@ -312,10 +312,10 @@
     <!-- 当下感悟 -->
     <div class="insight-card">
       <h2>当下的感悟</h2>
-      <p class="desc" style="color:var(--muted-fg);font-size:12.5px;margin:0">写下此刻的思考与感受，约 50 字。它会随当天记录一起保存，供日后回看心路。</p>
+      <p class="desc" style="color:var(--muted-fg);font-size:12.5px;margin:0">写下此刻的思考与感受，300 字以内。它会随当天记录一起保存，供日后回看心路。</p>
       <div class="insight-row">
-        <textarea id="insightInput" maxlength="80" placeholder="例如：今天拖延的根源是任务太大，拆小后反而停不下来；精力高峰确实在上午。"></textarea>
-        <span class="insight-cnt" id="insightCnt">0 / 50</span>
+        <textarea id="insightInput" maxlength="300" placeholder="例如：今天拖延的根源是任务太大，拆小后反而停不下来；精力高峰确实在上午。"></textarea>
+        <span class="insight-cnt" id="insightCnt">0 / 300</span>
       </div>
     </div>
 
@@ -594,7 +594,7 @@ function renderRecords(){
 /* ============================================================
    渲染：当下感悟
    ============================================================ */
-const INSIGHT_SOFT_LIMIT = 50;
+const INSIGHT_SOFT_LIMIT = 300;
 function renderInsight(){
   const v = DB.insights[currentDate]||'';
   const ta=$('#insightInput'); ta.value=v;

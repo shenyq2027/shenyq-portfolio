@@ -276,14 +276,29 @@
   .ai-section li{margin:3px 0;font-size:13px}
   .ai-suggest{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent);color:var(--primary);border-radius:7px;font-size:12px;margin-top:6px}
 
-  .mindmap-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);position:relative;height:320px;overflow:hidden}
-  .mindmap-toolbar{position:absolute;top:8px;right:8px;z-index:2;display:flex;gap:6px}
-  .mindmap-canvas{position:absolute;top:0;left:0;width:100%;height:100%}
-  .mind-node{position:absolute;min-width:80px;max-width:180px;padding:8px 12px;background:var(--card);border:1px solid var(--primary);border-radius:8px;font-size:12.5px;cursor:move;box-shadow:var(--shadow);user-select:none}
-  .mind-node.root{background:var(--primary);color:var(--primary-fg);font-weight:600}
-  .mind-node.selected{box-shadow:0 0 0 3px oklch(0.66 0.11 240 / 0.3)}
-  .mind-node input{border:none;background:transparent;font-size:inherit;width:100%;padding:0;font-family:inherit}
-  .mind-node input:focus{outline:none}
+  /* 图片上传 */
+  .image-upload{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+  .image-preview{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+  .image-preview-item{position:relative;width:120px;height:120px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .image-preview-item img{width:100%;height:100%;object-fit:cover}
+  .image-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+  .image-upload-area{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .15s}
+  .image-upload-area:hover{border-color:var(--primary)}
+  .image-upload-area p{margin:6px 0 0;color:var(--muted-fg);font-size:12px}
+
+  /* 文档视图 */
+  .doc-view{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+  .doc-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .doc-header h3{margin:0;font-size:14px}
+  .doc-item{background:var(--muted);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--primary)}
+  .doc-item-date{font-size:11px;color:var(--muted-fg);margin-bottom:6px}
+  .doc-item-title{font-weight:600;font-size:13px;margin-bottom:6px}
+  .doc-item-body{font-size:12.5px;white-space:pre-wrap;line-height:1.6}
+  .doc-item-actions{display:flex;gap:6px;margin-top:8px}
+  .doc-empty{text-align:center;padding:20px;color:var(--muted-fg);font-size:13px}
+
+  /* 导出按钮组 */
+  .export-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 
   .user-summary{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
   .user-summary h3{font-size:14px;margin:0 0 6px}
@@ -472,6 +487,11 @@
       <aside class="folder-tree">
         <h3>📂 类别文件夹</h3>
         <div id="folderTree"></div>
+        <div class="export-row">
+          <button class="btn sm" id="exportByDate">📅 按日期导出</button>
+          <button class="btn sm" id="exportByMonth">📆 按月导出</button>
+          <button class="btn sm" id="exportByCategory">🏷️ 按类别导出</button>
+        </div>
       </aside>
 
       <!-- 右侧：当日收获详情 -->
@@ -479,58 +499,46 @@
         <!-- 原始输入 -->
         <div class="harvest-input-card">
           <h2>今天接受的内容</h2>
-          <p class="desc" style="color:var(--muted-fg);font-size:12.5px;margin:0 0 8px">粘贴链接、网页内容、公众号文字等，稍后 AI 会帮你提炼关键观点。</p>
-          <textarea id="harvestInput" placeholder="例：&#10;https://mp.weixin.qq.com/s/xxxxx&#10;&#10;今天读到一篇讲「时间管理」的文章，核心观点是……&#10;&#10;还看了 B 站戴师兄的数据分析课程第 3 课……"></textarea>
-          <div class="ai-config">
-            <span class="muted">AI 配置：</span>
-            <input type="text" id="aiBaseUrl" placeholder="API Base URL（如 https://api.deepseek.com/v1）" />
-            <input type="password" id="aiApiKey" placeholder="API Key" style="width:140px" />
-            <input type="text" id="aiModel" placeholder="模型名（如 deepseek-chat）" style="width:100px" />
-            <button class="btn sm primary" id="aiExtract" disabled title="请先配置 AI API">AI 提炼观点</button>
-          </div>
+          <p class="desc" style="color:var(--muted-fg);font-size:12.5px;margin:0 0 8px">粘贴链接、网页内容、公众号文字等。</p>
+          <textarea id="harvestInput" placeholder="例：&#10;https://mp.weixin.qq.com/s/xxxxx&#10;&#10;今天读到一篇讲「时间管理」的文章，核心观点是……"></textarea>
         </div>
 
-        <!-- AI 提炼结果 -->
-        <div class="ai-insights hidden" id="aiInsightsCard">
-          <h3>🤖 AI 提炼结果 <button class="btn ghost sm" id="aiRefresh" style="margin-left:8px">重新提炼</button></h3>
-          <div id="aiInsightsBody"></div>
+        <!-- 图片上传 -->
+        <div class="image-upload">
+          <h3 style="font-size:14px;margin:0 0 8px">📷 上传图片</h3>
+          <div class="image-upload-area" id="imageUploadArea">
+            <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
+            <span>点击上传图片（可多选）</span>
+            <p>自动压缩存储，支持 JPG/PNG</p>
+          </div>
+          <div class="image-preview" id="imagePreview"></div>
         </div>
 
-        <!-- 思维导图画布 -->
-        <div class="card" style="padding:12px">
-          <div class="row" style="margin-bottom:8px">
-            <h2 class="grow" style="margin:0;font-size:14px">🗺️ 思维导图</h2>
-            <button class="btn sm" id="mindAddNode">+ 添加节点</button>
-            <button class="btn sm" id="mindAddChild">+ 添加子节点</button>
-            <button class="btn sm danger" id="mindDelNode">删除选中</button>
-          </div>
-          <div class="mindmap-wrap" id="mindmapWrap">
-            <div class="mindmap-toolbar">
-              <button class="btn sm ghost" id="mindReset">重排布局</button>
-            </div>
-            <svg class="mindmap-canvas" id="mindmapLines"></svg>
-            <div id="mindmapNodes"></div>
-          </div>
-        </div>
-
-        <!-- 用户总结 -->
+        <!-- 文档编辑区 -->
         <div class="user-summary">
-          <h3>✍️ 用自己的话输出</h3>
-          <p class="desc" style="color:var(--muted-fg);font-size:12.5px;margin:0 0 6px">把上面的内容消化后，用你的语言写下来，这才是真正属于你的知识。</p>
-          <textarea id="harvestSummary" placeholder="用自己的话总结今天的收获……"></textarea>
+          <h3>📝 编辑内容</h3>
+          <p class="desc" style="color:var(--muted-fg);font-size:12.5px;margin:0 0 6px">写下你的思考、总结和行动项。</p>
+          <textarea id="harvestSummary" placeholder="用自己的话总结今天的收获……（支持多行、换行）"></textarea>
           <div class="save-row">
             <div class="category-select">
               <select id="harvestGoal">
                 <option value="">选择大目标（主文件夹）</option>
-                <!-- 动态填充 -->
               </select>
               <select id="harvestSub">
                 <option value="">选择子目标（子文件夹）</option>
-                <!-- 动态填充 -->
               </select>
             </div>
-            <button class="btn primary sm" id="harvestSave">保存到类别文件夹</button>
+            <button class="btn primary sm" id="harvestSave">保存到文档</button>
           </div>
+        </div>
+
+        <!-- 文档列表 -->
+        <div class="doc-view" id="docView">
+          <div class="doc-header">
+            <h3 id="docViewTitle">📋 文档列表</h3>
+            <button class="btn sm ghost" id="refreshDocs">🔄 刷新</button>
+          </div>
+          <div id="docList"></div>
         </div>
       </main>
     </div>
@@ -1339,15 +1347,17 @@ function renderStats(){
 /* ============================================================
    每日收获 —— 类别文件夹树
    ============================================================ */
+let _harvestImages=[]; // 临时存储上传的图片
+
 function renderFolderTree(selectedGoalId, selectedSubIdx){
   const tree=$('#folderTree');
   if(!tree) return;
   if(!DB.goals.length){ tree.innerHTML='<div class="muted" style="font-size:12px;padding:8px">暂无大目标，请先在「大目标管理」里添加</div>'; return; }
-  // 统计每个目标下的收获数量
+  
   const counts={};
   Object.values(DB.harvest).flat().forEach(h=>{
     if(h.categoryGoalId){
-      const k=h.categoryGoalId+'-'+(h.categorySubIdx||0);
+      const k=h.categoryGoalId+'-'+(h.categorySubIdx!=null?h.categorySubIdx:0);
       counts[k]=(counts[k]||0)+1;
     }
   });
@@ -1376,215 +1386,393 @@ function renderFolderTree(selectedGoalId, selectedSubIdx){
 }
 
 /* ============================================================
-   每日收获 —— 渲染当日详情
+   每日收获 —— 渲染
    ============================================================ */
 function renderHarvest(){
   renderFolderTree();
   renderHarvestGoalSelect();
-  renderMindmap();
-  // 恢复 AI 配置（元素可能不存在，跳过）
-  const cfg=DB.aiConfig||{};
-  if($('#aiBaseUrl')) $('#aiBaseUrl').value=cfg.baseUrl||'';
-  if($('#aiApiKey')) $('#aiApiKey').value=cfg.apiKey||'';
-  if($('#aiModel')) $('#aiModel').value=cfg.model||'';
-  updateAiButton();
+  renderDocumentList();
+  renderImagePreview();
+  // 清空输入
+  const input=$('#harvestInput');
+  const summary=$('#harvestSummary');
+  if(input && !input.value) input.value='';
+  if(summary && !summary.value) summary.value='';
 }
+
 function renderHarvestGoalSelect(){
   const goalSel=$('#harvestGoal');
   const subSel=$('#harvestSub');
   if(!goalSel || !subSel) return;
-  goalSel.innerHTML='<option value="">选择大目标（主文件夹）</option>'+DB.goals.map(g=>`<option value="${g.id}">${esc(g.title)}</option>`).join('');
-  subSel.innerHTML='<option value="">选择子目标（子文件夹）</option>';
-}
-function updateAiButton(){
-  const btn=$('#aiExtract');
-  if(!btn) return;
-  const cfg=DB.aiConfig||{};
-  const hasConfig=cfg.baseUrl && cfg.apiKey && cfg.model;
-  btn.disabled=!hasConfig;
-  btn.title=hasConfig?'调用 AI 提炼观点':'请先配置 AI API';
+  const currentGoal=$('.folder-head.active')?.dataset.gid || '';
+  const currentSub=$('.subfolder.active')?.dataset.si || '';
+  goalSel.innerHTML='<option value="">选择大目标（主文件夹）</option>'+DB.goals.map(g=>`<option value="${g.id}" ${g.id===currentGoal?'selected':''}>${esc(g.title)}</option>`).join('');
+  if(currentGoal){
+    const g=DB.goals.find(x=>x.id===currentGoal);
+    if(g){
+      subSel.innerHTML='<option value="">选择子目标（子文件夹）</option>'+ (g.sub||[]).map((s,i)=>`<option value="${i}" ${String(i)===currentSub?'selected':''}>${esc(s.t)}</option>`).join('');
+    }
+  } else {
+    subSel.innerHTML='<option value="">选择子目标（子文件夹）</option>';
+  }
 }
 
 /* ============================================================
-   每日收获 —— 思维导图
+   每日收获 —— 图片上传与压缩
    ============================================================ */
-let _mindmapNodes=[]; // [{id,text,x,y,parentId}] 重命名避免与 DOM id 冲突
-let mindmapSelected=null;
-
-function renderMindmap(){
-  const wrap=$('#mindmapNodes');
-  const svg=$('#mindmapLines');
-  if(!_mindmapNodes.length){
-    // 初始化一个根节点
-    _mindmapNodes=[{id:uid(),text:'中心主题',x:200,y:140,parentId:null}];
-  }
-  if(!wrap || !svg) return;
-  wrap.innerHTML=_mindmapNodes.map(n=>`
-    <div class="mind-node ${!n.parentId?'root':''} ${mindmapSelected===n.id?'selected':''}" data-id="${n.id}" style="left:${n.x}px;top:${n.y}px">
-      <input value="${esc(n.text)}" data-id="${n.id}">
-    </div>
-  `).join('');
-  // 画连线
-  const lines=_mindmapNodes.filter(n=>n.parentId).map(n=>{
-    const parent=_mindmapNodes.find(p=>p.id===n.parentId);
-    if(!parent) return '';
-    const x1=parent.x+60, y1=parent.y+16;
-    const x2=n.x+60, y2=n.y+16;
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--primary)" stroke-width="1.5" opacity="0.6"/>`;
-  }).join('');
-  svg.innerHTML=lines;
-  // 绑定拖拽
-  $$('.mind-node').forEach(el=>{
-    // 点击选中（不拖拽）
-    el.addEventListener('mousedown', e=>{
-      if(e.target.tagName==='INPUT') return;
-      const id=el.dataset.id;
-      // 只更新选中状态，不重新渲染
-      mindmapSelected=id;
-      $$('.mind-node').forEach(p=>p.classList.toggle('selected', p.dataset.id===mindmapSelected));
-      // 拖拽逻辑
-      const rect=el.getBoundingClientRect();
-      const wrapRect=$('#mindmapWrap').getBoundingClientRect();
-      const ox=e.clientX-rect.left, oy=e.clientY-rect.top;
-      function onmove(ev){
-        const nx=ev.clientX-wrapRect.left-ox, ny=ev.clientY-wrapRect.top-oy;
-        const node=_mindmapNodes.find(p=>p.id===id);
-        if(node){ 
-          node.x=Math.max(0,Math.min(nx,wrapRect.width-120)); 
-          node.y=Math.max(0,Math.min(ny,wrapRect.height-32)); 
-          el.style.left=node.x+'px'; 
-          el.style.top=node.y+'px';
-          renderMindmapLines();
-        }
-      }
-      function onup(){ document.removeEventListener('mousemove',onmove); document.removeEventListener('mouseup',onup); }
-      document.addEventListener('mousemove',onmove);
-      document.addEventListener('mouseup',onup);
-    });
-    el.querySelector('input').addEventListener('input', e=>{
-      const node=_mindmapNodes.find(p=>p.id===el.dataset.id);
-      if(node) node.text=e.target.value;
-    });
-    el.querySelector('input').addEventListener('focus', ()=>{
-      mindmapSelected=el.dataset.id;
-      $$('.mind-node').forEach(p=>p.classList.toggle('selected', p.dataset.id===mindmapSelected));
-    });
+function compressImage(file, maxWidth=800, quality=0.7){
+  return new Promise((resolve)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width, h=img.height;
+        if(w>maxWidth){ h=Math.round(h*maxWidth/w); w=maxWidth; }
+        const canvas=document.createElement('canvas');
+        canvas.width=w; canvas.height=h;
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
   });
 }
-function renderMindmapLines(){
-  const svg=$('#mindmapLines');
-  const lines=_mindmapNodes.filter(n=>n.parentId).map(n=>{
-    const parent=_mindmapNodes.find(p=>p.id===n.parentId);
-    if(!parent) return '';
-    const x1=parent.x+60, y1=parent.y+16;
-    const x2=n.x+60, y2=n.y+16;
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--primary)" stroke-width="1.5" opacity="0.6"/>`;
-  }).join('');
-  svg.innerHTML=lines;
+
+function renderImagePreview(){
+  const preview=$('#imagePreview');
+  if(!preview) return;
+  if(!_harvestImages.length){
+    preview.innerHTML='';
+    return;
+  }
+  preview.innerHTML=_harvestImages.map((img,i)=>`
+    <div class="image-preview-item">
+      <img src="${img}" alt="preview">
+      <button class="image-del" data-idx="${i}" title="删除">×</button>
+    </div>
+  `).join('');
 }
 
+async function handleImageUpload(files){
+  for(const file of files){
+    if(!file.type.startsWith('image/')) continue;
+    const compressed=await compressImage(file);
+    _harvestImages.push(compressed);
+  }
+  renderImagePreview();
+}
+
+/* ============================================================
+   每日收获 —— 文档列表与编辑
+   ============================================================ */
+let _docViewFilter={goalId:null, subIdx:null};
+
+function renderDocumentList(){
+  const list=$('#docList');
+  const title=$('#docViewTitle');
+  if(!list) return;
+  
+  const {goalId, subIdx}=_docViewFilter;
+  let items=[];
+  
+  Object.entries(DB.harvest).forEach(([date, arr])=>{
+    arr.forEach(h=>{
+      if(goalId && h.categoryGoalId!==goalId) return;
+      if(subIdx!=null && h.categorySubIdx!=subIdx) return;
+      items.push({...h, date});
+    });
+  });
+  
+  // 按日期倒序
+  items.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  
+  if(goalId){
+    const g=DB.goals.find(x=>x.id===goalId);
+    title.textContent=subIdx!=null 
+      ? `📋 ${esc(g?.title||'')} / ${esc(g?.sub?.[subIdx]?.t||'')}` 
+      : `📋 ${esc(g?.title||'')}（全部）`;
+  } else {
+    title.textContent='📋 所有文档';
+  }
+  
+  if(!items.length){
+    list.innerHTML='<div class="doc-empty">暂无文档，保存后会在这里显示</div>';
+    return;
+  }
+  
+  list.innerHTML=items.map(item=>`
+    <div class="doc-item" data-id="${item.id}">
+      <div class="doc-item-date">📅 ${item.date} · ${new Date(item.createdAt).toLocaleString('zh-CN')}</div>
+      <div class="doc-item-title">${esc((item.rawContent||'').slice(0,30))}</div>
+      <div class="doc-item-body">${esc(item.userSummary||item.rawContent||'（无内容）')}</div>
+      ${item.images && item.images.length ? `<div class="image-preview" style="margin-top:8px">${item.images.map(src=>`<div class="image-preview-item" style="width:80px;height:80px"><img src="${src}"></div>`).join('')}</div>` : ''}
+      <div class="doc-item-actions">
+        <button class="btn sm ghost doc-edit" data-id="${item.id}">✏️ 编辑</button>
+        <button class="btn sm ghost doc-delete" data-id="${item.id}">🗑️ 删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function editDocument(id){
+  // 找到文档
+  let doc=null, docDate=null;
+  Object.entries(DB.harvest).forEach(([date, arr])=>{
+    const found=arr.find(h=>h.id===id);
+    if(found){ doc=found; docDate=date; }
+  });
+  if(!doc) return;
+  
+  // 填充到编辑区
+  $('#harvestInput').value=doc.rawContent||'';
+  $('#harvestSummary').value=doc.userSummary||'';
+  
+  // 设置分类
+  $('#harvestGoal').value=doc.categoryGoalId||'';
+  // 触发 change 更新子目标
+  $('#harvestGoal').dispatchEvent(new Event('change'));
+  if(doc.categorySubIdx!=null){
+    setTimeout(()=>{ $('#harvestSub').value=doc.categorySubIdx; }, 50);
+  }
+  
+  // 清空图片
+  _harvestImages=[];
+  if(doc.images){ _harvestImages=[...doc.images]; }
+  renderImagePreview();
+  
+  // 滚动到编辑区
+  $('#harvestInput').scrollIntoView({behavior:'smooth', block:'center'});
+  
+  // 临时标记为编辑模式
+  window._editingDocId=id;
+  window._editingDocDate=docDate;
+  
+  toast('已载入文档，编辑后点击「保存修改」');
+}
+
+function deleteDocument(id){
+  if(!confirm('确定删除此文档？')) return;
+  Object.entries(DB.harvest).forEach(([date, arr])=>{
+    const idx=arr.findIndex(h=>h.id===id);
+    if(idx>=0) arr.splice(idx,1);
+  });
+  Store.set(DB);
+  renderDocumentList();
+  renderFolderTree(_docViewFilter.goalId, _docViewFilter.subIdx);
+  toast('已删除');
+}
+
+/* ============================================================
+   每日收获 —— CSV 导出
+   ============================================================ */
+function escapeCSV(s){
+  if(s==null) return '';
+  s=String(s);
+  if(s.includes(',') || s.includes('"') || s.includes('\n')){
+    return '"'+s.replace(/"/g,'""')+'"';
+  }
+  return s;
+}
+
+function downloadCSV(filename, rows){
+  const csv='\uFEFF'+rows.map(r=>r.map(escapeCSV).join(',')).join('\n');
+  const blob=new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportByDate(){
+  const rows=[['日期','大目标','子目标','原始内容','总结','图片数量']];
+  Object.entries(DB.harvest).sort().forEach(([date, arr])=>{
+    arr.forEach(h=>{
+      const g=DB.goals.find(x=>x.id===h.categoryGoalId);
+      const sub=g?.sub?.[h.categorySubIdx];
+      rows.push([
+        date,
+        g?.title||'',
+        sub?.t||'',
+        (h.rawContent||'').slice(0,100),
+        (h.userSummary||'').slice(0,200),
+        (h.images?.length||0)+'张图片'
+      ]);
+    });
+  });
+  if(rows.length<=1){ toast('暂无数据可导出'); return; }
+  downloadCSV(`收获_按日期_${todayStr()}.csv`, rows);
+  toast('已导出');
+}
+
+function exportByMonth(){
+  const monthly={};
+  Object.entries(DB.harvest).forEach(([date, arr])=>{
+    const month=date.slice(0,7);
+    if(!monthly[month]) monthly[month]={total:0, goals:{}};
+    monthly[month].total+=arr.length;
+    arr.forEach(h=>{
+      const g=DB.goals.find(x=>x.id===h.categoryGoalId);
+      const gname=g?.title||'未分类';
+      monthly[month].goals[gname]=(monthly[month].goals[gname]||0)+1;
+    });
+  });
+  
+  const rows=[['月份','文档数','分类汇总']];
+  Object.entries(monthly).sort().forEach(([month, data])=>{
+    const detail=Object.entries(data.goals).map(([k,v])=>`${k}×${v}`).join('; ');
+    rows.push([month, data.total, detail]);
+  });
+  if(rows.length<=1){ toast('暂无数据可导出'); return; }
+  downloadCSV(`收获_按月_${todayStr()}.csv`, rows);
+  toast('已导出');
+}
+
+function exportByCategory(){
+  const catMap={};
+  Object.values(DB.harvest).flat().forEach(h=>{
+    const g=DB.goals.find(x=>x.id===h.categoryGoalId);
+    if(!g) return;
+    const key=g.title;
+    if(!catMap[key]) catMap[key]={total:0, subs:{}};
+    catMap[key].total++;
+    const sub=g.sub?.[h.categorySubIdx];
+    const subName=sub?.t||'未指定子目标';
+    catMap[key].subs[subName]=(catMap[key].subs[subName]||0)+1;
+  });
+  
+  const rows=[['大目标','文档数','子目标分布']];
+  Object.entries(catMap).sort().forEach(([name, data])=>{
+    const subDetail=Object.entries(data.subs).map(([k,v])=>`${k}×${v}`).join('; ');
+    rows.push([name, data.total, subDetail]);
+  });
+  if(rows.length<=1){ toast('暂无数据可导出'); return; }
+  downloadCSV(`收获_按类别_${todayStr()}.csv`, rows);
+  toast('已导出');
+}
+
+/* ============================================================
+   每日收获 —— 事件绑定
+   ============================================================ */
 function bindHarvestEvents(){
-  // 只绑定一次（使用事件委托避免重复绑定）
   if(window._harvestBound) return;
   window._harvestBound=true;
   
-  // 事件委托：在 panel-harvest 上监听所有相关事件
   const panel=$('#panel-harvest');
   if(!panel) return;
   
-  // 点击事件委托
+  // 点击事件
   panel.addEventListener('click', e=>{
     const t=e.target;
     
-    // 思维导图按钮
-    if(t.id==='mindAddNode'){
-      _mindmapNodes.push({id:uid(),text:'新节点',x:100+Math.random()*200,y:80+Math.random()*120,parentId:null});
-      renderMindmap();
-    }
-    if(t.id==='mindAddChild'){
-      if(!mindmapSelected){ toast('请先选中一个节点'); return; }
-      const parent=_mindmapNodes.find(p=>p.id===mindmapSelected);
-      if(!parent) return;
-      _mindmapNodes.push({id:uid(),text:'子节点',x:parent.x+120,y:parent.y+40,parentId:parent.id});
-      renderMindmap();
-    }
-    if(t.id==='mindDelNode'){
-      if(!mindmapSelected){ toast('请先选中节点'); return; }
-      const toDel=[mindmapSelected];
-      let added=true;
-      while(added){ added=false; _mindmapNodes.forEach(n=>{ if(n.parentId && toDel.includes(n.parentId) && !toDel.includes(n.id)){ toDel.push(n.id); added=true; } }); }
-      _mindmapNodes=_mindmapNodes.filter(n=>!toDel.includes(n.id));
-      mindmapSelected=null;
-      renderMindmap();
-    }
-    if(t.id==='mindReset'){
-      const root=_mindmapNodes.find(n=>!n.parentId);
-      if(root){ root.x=200; root.y=140; }
-      const children=_mindmapNodes.filter(n=>n.parentId);
-      if(children.length){
-        children.forEach((n,i)=>{
-          const angle=(i/children.length)*Math.PI*2;
-          n.x=root.x+Math.cos(angle)*150;
-          n.y=root.y+Math.sin(angle)*80;
-        });
-      }
-      renderMindmap();
-    }
-    // 保存收获
+    // 保存
     if(t.id==='harvestSave'){
       const goalId=$('#harvestGoal').value;
       const subIdx=$('#harvestSub').value;
-      if(!goalId){ toast('请选择大目标'); return; }
       const raw=$('#harvestInput').value.trim();
       const summary=$('#harvestSummary').value.trim();
-      if(!raw && !summary){ toast('内容或总结至少填一项'); return; }
-      if(!DB.harvest[currentDate]) DB.harvest[currentDate]=[];
-      DB.harvest[currentDate].push({
-        id:uid(),
-        rawContent:raw,
-        aiInsights:null,
-        mindmap:JSON.parse(JSON.stringify(_mindmapNodes)),
-        userSummary:summary,
-        categoryGoalId:goalId,
-        categorySubIdx:subIdx?parseInt(subIdx):null,
-        createdAt:new Date().toISOString(),
-        updatedAt:new Date().toISOString()
-      });
+      if(!goalId){ toast('请选择大目标'); return; }
+      if(!raw && !summary && !_harvestImages.length){ toast('请填写内容或上传图片'); return; }
+      
+      // 编辑模式
+      if(window._editingDocId){
+        Object.entries(DB.harvest).forEach(([date, arr])=>{
+          const doc=arr.find(h=>h.id===window._editingDocId);
+          if(doc){
+            doc.rawContent=raw;
+            doc.userSummary=summary;
+            doc.categoryGoalId=goalId;
+            doc.categorySubIdx=subIdx?parseInt(subIdx):null;
+            doc.images=[..._harvestImages];
+            doc.updatedAt=new Date().toISOString();
+          }
+        });
+        window._editingDocId=null;
+        window._editingDocDate=null;
+        toast('已修改并保存');
+      } else {
+        // 新建
+        if(!DB.harvest[currentDate]) DB.harvest[currentDate]=[];
+        DB.harvest[currentDate].push({
+          id:uid(),
+          rawContent:raw,
+          userSummary:summary,
+          images:[..._harvestImages],
+          categoryGoalId:goalId,
+          categorySubIdx:subIdx?parseInt(subIdx):null,
+          createdAt:new Date().toISOString(),
+          updatedAt:new Date().toISOString()
+        });
+        toast('已保存到文档');
+      }
+      
       Store.set(DB);
       $('#harvestInput').value='';
       $('#harvestSummary').value='';
-      _mindmapNodes=[{id:uid(),text:'中心主题',x:200,y:140,parentId:null}];
+      _harvestImages=[];
       renderHarvest();
-      toast('已保存到类别文件夹');
     }
-    // 文件夹树点击
+    
+    // 文件夹点击
     const head=t.closest('.folder-head');
     const sub=t.closest('.subfolder');
-    if(head){ $('#harvestGoal').value=head.dataset.gid; $('#harvestGoal').dispatchEvent(new Event('change')); }
-    if(sub){ $('#harvestGoal').value=sub.dataset.gid; $('#harvestGoal').dispatchEvent(new Event('change')); $('#harvestSub').value=sub.dataset.si; }
-    // AI 按钮
-    if(t.id==='aiExtract'){ toast('AI 提炼功能尚未接入，请稍后'); }
-    if(t.id==='aiRefresh'){ toast('AI 提炼功能尚未接入，请稍后'); }
+    if(head){
+      _docViewFilter={goalId:head.dataset.gid, subIdx:null};
+      $('#harvestGoal').value=head.dataset.gid;
+      $('#harvestGoal').dispatchEvent(new Event('change'));
+      renderFolderTree(_docViewFilter.goalId, null);
+      renderDocumentList();
+    }
+    if(sub){
+      _docViewFilter={goalId:sub.dataset.gid, subIdx:parseInt(sub.dataset.si)};
+      $('#harvestGoal').value=sub.dataset.gid;
+      $('#harvestGoal').dispatchEvent(new Event('change'));
+      $('#harvestSub').value=sub.dataset.si;
+      renderFolderTree(_docViewFilter.goalId, _docViewFilter.subIdx);
+      renderDocumentList();
+    }
+    
+    // 文档操作
+    const editBtn=t.closest('.doc-edit');
+    if(editBtn){ editDocument(editBtn.dataset.id); return; }
+    const delBtn=t.closest('.doc-delete');
+    if(delBtn){ deleteDocument(delBtn.dataset.id); return; }
+    
+    // 图片删除
+    const imgDel=t.closest('.image-del');
+    if(imgDel){
+      _harvestImages.splice(parseInt(imgDel.dataset.idx),1);
+      renderImagePreview();
+      return;
+    }
+    
+    // 图片上传区域点击
+    if(t.closest('#imageUploadArea')){
+      $('#imageInput').click();
+    }
+    
+    // 刷新文档
+    if(t.id==='refreshDocs'){
+      renderDocumentList();
+      toast('已刷新');
+    }
+    
+    // 导出
+    if(t.id==='exportByDate'){ exportByDate(); }
+    if(t.id==='exportByMonth'){ exportByMonth(); }
+    if(t.id==='exportByCategory'){ exportByCategory(); }
   });
   
-  // change 事件委托
+  // change 事件
   panel.addEventListener('change', e=>{
     const t=e.target;
     if(t.id==='harvestGoal'){
       const g=DB.goals.find(x=>x.id===t.value);
-      if(!g) return;
-      $('#harvestSub').innerHTML='<option value="">选择子目标（子文件夹）</option>'+ (g.sub||[]).map((s,i)=>`<option value="${i}">${esc(s.t)}</option>`).join('');
+      $('#harvestSub').innerHTML='<option value="">选择子目标（子文件夹）</option>'+ (g?.sub||[]).map((s,i)=>`<option value="${i}">${esc(s.t)}</option>`).join('');
     }
-  });
-  
-  // input 事件委托（AI 配置）
-  panel.addEventListener('input', e=>{
-    const t=e.target;
-    if(t.id==='aiBaseUrl' || t.id==='aiApiKey' || t.id==='aiModel'){
-      DB.aiConfig.baseUrl=$('#aiBaseUrl').value.trim();
-      DB.aiConfig.apiKey=$('#aiApiKey').value.trim();
-      DB.aiConfig.model=$('#aiModel').value.trim();
-      Store.set(DB); updateAiButton();
+    if(t.id==='imageInput'){
+      if(t.files.length){ handleImageUpload(t.files); t.value=''; }
     }
   });
 }

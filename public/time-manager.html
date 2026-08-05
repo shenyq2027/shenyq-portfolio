@@ -198,69 +198,40 @@
     border-color:var(--primary);
   }
 
-  /* ============ 月度专注力热力图 ============ */
-  .heatmap-wrap{
-    margin-top:20px;
-  }
-  .heatmap-header{
-    display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
-  }
-  .heatmap-title{
-    font-size:14px;font-weight:700;color:var(--fg);display:flex;align-items:center;gap:8px;
-  }
-  .heatmap-nav{
-    display:flex;align-items:center;gap:6px;
-  }
+  /* ============ 月度专注力热力图 (紧凑版) ============ */
+  .heatmap-wrap{margin-top:12px}
+  .heatmap-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .heatmap-title{font-size:13px;font-weight:700;color:var(--fg);display:flex;align-items:center;gap:6px}
+  .heatmap-nav{display:flex;align-items:center;gap:4px}
   .heatmap-nav button{
     background:linear-gradient(135deg, oklch(1 0 0 / 0.5), oklch(0.95 0.01 240 / 0.3));
     border:1px solid oklch(1 0 0 / 0.4);
     backdrop-filter:blur(10px);
     -webkit-backdrop-filter:blur(10px);
-    border-radius:8px;
-    padding:4px 10px;
-    font-size:12px;
-    cursor:pointer;
-    font-family:inherit;
-    color:var(--fg);
-    transition:all .15s;
+    border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer;font-family:inherit;color:var(--fg);transition:all .15s;
   }
   .heatmap-nav button:hover{border-color:var(--primary)}
-  .heatmap-nav .month-label{
-    font-size:13px;font-weight:600;color:var(--fg);min-width:110px;text-align:center;
-  }
+  .heatmap-nav .month-label{font-size:12px;font-weight:600;color:var(--fg);min-width:80px;text-align:center}
 
-  .heatmap-grid{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:6px;
-  }
-  .heatmap-weekday{
-    font-size:11px;color:var(--muted-fg);text-align:center;padding:4px 0;font-weight:600;
-  }
+  .heatmap-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .heatmap-weekday{font-size:10px;color:var(--muted-fg);text-align:center;padding:2px 0;font-weight:600}
   .heatmap-cell{
-    aspect-ratio:1;
-    border-radius:8px;
+    width:100%;aspect-ratio:1;border-radius:3px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    font-size:11px;font-weight:600;
-    cursor:pointer;
-    transition:transform .15s, box-shadow .15s;
-    position:relative;
+    font-size:9px;font-weight:600;cursor:pointer;
+    transition:transform .12s, box-shadow .12s;
     background:linear-gradient(135deg, oklch(1 0 0 / 0.4), oklch(0.96 0.01 240 / 0.25));
-    border:1px solid oklch(1 0 0 / 0.35);
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
+    border:1px solid oklch(1 0 0 / 0.3);
     color:var(--muted-fg);
+    min-height:14px;
   }
   .heatmap-cell.has-data{color:oklch(0.3 0.04 240)}
-  .heatmap-cell:hover{transform:scale(1.08);box-shadow:0 4px 12px oklch(0.55 0.08 240 / 0.2);z-index:2}
-  .heatmap-cell.empty{opacity:.4;cursor:default}
+  .heatmap-cell:hover{transform:scale(1.2);box-shadow:0 2px 8px oklch(0.55 0.08 240 / 0.2);z-index:2}
+  .heatmap-cell.empty{opacity:.35;cursor:default}
   .heatmap-cell.empty:hover{transform:none;box-shadow:none}
-  .heatmap-cell.today{
-    border:2px solid var(--primary);
-    box-shadow:0 0 0 2px oklch(0.66 0.11 240 / 0.2), inset 0 0 8px oklch(0.66 0.11 240 / 0.1);
-  }
-  .heatmap-cell .day-num{font-size:12px;line-height:1}
-  .heatmap-cell .focus-val{font-size:9px;margin-top:1px;font-weight:700}
+  .heatmap-cell.today{border:1.5px solid var(--primary);box-shadow:0 0 0 1px oklch(0.66 0.11 240 / 0.15)}
+  .heatmap-cell .day-num{font-size:9px;line-height:1}
+  .heatmap-cell .focus-val{font-size:7px;margin-top:0;font-weight:700}
 
   /* 专注度颜色层级 */
   .heatmap-cell.focus-0{background:linear-gradient(135deg, oklch(0.97 0.005 240 / 0.55), oklch(0.93 0.01 240 / 0.4));border-color:oklch(0.88 0.02 240 / 0.5)}
@@ -268,69 +239,34 @@
   .heatmap-cell.focus-2{background:linear-gradient(135deg, oklch(0.75 0.07 240 / 0.65), oklch(0.65 0.08 240 / 0.55));color:oklch(0.2 0.04 240)}
   .heatmap-cell.focus-3{background:linear-gradient(135deg, oklch(0.68 0.09 240 / 0.7), oklch(0.58 0.1 240 / 0.6));color:oklch(0.15 0.03 240)}
   .heatmap-cell.focus-4{background:linear-gradient(135deg, oklch(0.62 0.11 240 / 0.75), oklch(0.52 0.12 240 / 0.65));color:oklch(1 0 0)}
-  .heatmap-cell.focus-5{background:linear-gradient(135deg, oklch(0.58 0.13 240 / 0.8), oklch(0.48 0.14 240 / 0.7));color:oklch(1 0 0);box-shadow:0 2px 8px oklch(0.55 0.12 240 / 0.25)}
+  .heatmap-cell.focus-5{background:linear-gradient(135deg, oklch(0.58 0.13 240 / 0.8), oklch(0.48 0.14 240 / 0.7));color:oklch(1 0 0);box-shadow:0 1px 4px oklch(0.55 0.12 240 / 0.2)}
 
-  .heatmap-legend{
-    display:flex;align-items:center;gap:12px;margin-top:14px;font-size:11px;color:var(--muted-fg);
-  }
-  .heatmap-legend .legend-level{
-    display:flex;align-items:center;gap:4px;
-  }
-  .heatmap-legend .legend-swatch{
-    width:16px;height:16px;border-radius:4px;border:1px solid oklch(1 0 0 / 0.4);
-  }
+  .heatmap-legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:var(--muted-fg)}
+  .heatmap-legend .legend-level{display:flex;align-items:center;gap:3px}
+  .heatmap-legend .legend-swatch{width:10px;height:10px;border-radius:2px;border:1px solid oklch(1 0 0 / 0.4)}
 
-  .heatmap-tooltip{
-    position:fixed;
-    background:linear-gradient(135deg, oklch(0.25 0.04 240 / 0.95), oklch(0.2 0.03 240 / 0.9));
-    color:oklch(0.98 0.005 240);
-    padding:8px 12px;
-    border-radius:10px;
-    font-size:12px;
-    pointer-events:none;
-    z-index:100;
-    box-shadow:0 8px 24px oklch(0 0 0 / 0.3);
-    white-space:nowrap;
-    border:1px solid oklch(1 0 0 / 0.15);
-    transform:translate(-50%, -120%);
-    transition:opacity .15s;
-  }
-  .heatmap-tooltip::after{
-    content:"";position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
-    border:5px solid transparent;border-top-color:oklch(0.2 0.03 240 / 0.9);
-  }
-
-  /* 统计概览增强 */
-  .stat-summary-row{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;
-  }
+  /* 统计概览 - 紧凑版 */
+  .stat-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
   @media(max-width:720px){.stat-summary-row{grid-template-columns:repeat(2,1fr)}}
-
   .stat-summary-card{
     background:linear-gradient(135deg, oklch(1 0 0 / 0.55), oklch(0.94 0.02 240 / 0.35));
     border:1px solid oklch(1 0 0 / 0.45);
-    border-radius:var(--radius);
-    padding:16px;
-    backdrop-filter:blur(20px) saturate(1.3);
-    -webkit-backdrop-filter:blur(20px) saturate(1.3);
-    box-shadow:
-      0 8px 32px oklch(0.55 0.08 240 / 0.1),
-      inset 0 1px 0 oklch(1 0 0 / 0.7);
+    border-radius:10px;padding:10px 12px;
+    backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
+    box-shadow:0 4px 16px oklch(0.55 0.08 240 / 0.08), inset 0 1px 0 oklch(1 0 0 / 0.7);
     position:relative;overflow:hidden;
   }
-  .stat-summary-card::before{
-    content:"";position:absolute;top:0;left:0;right:0;height:50%;
-    background:linear-gradient(180deg, oklch(1 0 0 / 0.3), transparent);
-    pointer-events:none;
-  }
-  .stat-summary-card .k{font-size:12px;color:var(--muted-fg);display:flex;align-items:center;gap:6px;font-weight:600}
-  .stat-summary-card .v{font-size:26px;font-weight:700;margin-top:6px;letter-spacing:.3px;background:linear-gradient(135deg, var(--primary), oklch(0.72 0.09 220));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .stat-summary-card .hint{font-size:11.5px;color:var(--muted-fg);margin-top:4px}
+  .stat-summary-card::before{content:"";position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(180deg, oklch(1 0 0 / 0.3), transparent);pointer-events:none}
+  .stat-summary-card .k{font-size:11px;color:var(--muted-fg);display:flex;align-items:center;gap:5px;font-weight:600}
+  .stat-summary-card .v{font-size:20px;font-weight:700;margin-top:3px;letter-spacing:.3px;background:linear-gradient(135deg, var(--primary), oklch(0.72 0.09 220));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat-summary-card .hint{font-size:10.5px;color:var(--muted-fg);margin-top:2px}
 
   /* 玻璃容器里的柱状图/饼图增强 */
-  .glass .week-chart{border-bottom-color:oklch(1 0 0 / 0.3)}
-  .glass .bar-track{background:oklch(1 0 0 / 0.4)}
+  .glass .week-chart{border-bottom-color:oklch(1 0 0 / 0.3);height:120px}
+  .glass .bar-track{background:oklch(1 0 0 / 0.4);height:14px}
   .glass .donut .hole{background:oklch(1 0 0 / 0.6);backdrop-filter:blur(8px)}
+  .glass .bar-row{grid-template-columns:70px 1fr 55px;font-size:11.5px}
+  .glass .bar-val{font-size:11px}
 
   /* Tab 玻璃化 */
   nav.tabs.glass-tabs{
@@ -726,75 +662,70 @@
 
   <!-- ============ 统计 ============ -->
   <section class="panel" id="panel-stats">
-    <!-- 数据概览卡片 -->
-    <div class="stat-summary-row">
-      <div class="stat-summary-card" id="ssTotal">
-        <div class="k">⏱ 本周总时长</div>
-        <div class="v" id="ssTotalVal">0h</div>
-        <div class="hint" id="ssTotalHint">7天累计投入</div>
-      </div>
-      <div class="stat-summary-card" id="ssFocus">
-        <div class="k">⚡ 平均专注度</div>
-        <div class="v" id="ssFocusVal">—</div>
-        <div class="hint" id="ssFocusHint">本周所有记录均值</div>
-      </div>
-      <div class="stat-summary-card" id="ssDays">
-        <div class="k">📅 打卡天数</div>
-        <div class="v" id="ssDaysVal">0</div>
-        <div class="hint" id="ssDaysHint">本周有记录的天数</div>
-      </div>
-      <div class="stat-summary-card" id="ssGoal">
-        <div class="k">🎯 目标达成率</div>
-        <div class="v" id="ssGoalVal">0%</div>
-        <div class="hint" id="ssGoalHint">投入大目标时间占比</div>
-      </div>
-    </div>
-
-    <!-- 本周时间占比 玻璃卡片 -->
-    <div class="card glass">
-      <div class="row">
-        <h2 class="grow" style="margin:0">本周时间占比</h2>
-        <span class="muted" id="weekRange" style="font-size:12px"></span>
-      </div>
-      <p class="desc">本周一到周日的每日时间分配堆叠图，以及各类型与各大目标的总占比。</p>
-      <div class="stat-grid">
+    <!-- 紧凑统计看板 -->
+    <div class="card glass" style="padding:14px 16px">
+      <!-- 概览 + 热力图 并排 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:10px">
+        <!-- 左侧：概览卡片 -->
         <div>
-          <div class="sect-title">每日类型堆叠（小时）</div>
-          <div class="week-chart" id="weekChart"></div>
-          <div class="legend" id="weekLegend"></div>
+          <div class="stat-summary-row" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+            <div class="stat-summary-card" id="ssTotal">
+              <div class="k">⏱ 本周总时长</div>
+              <div class="v" id="ssTotalVal">0h</div>
+              <div class="hint" id="ssTotalHint">7天累计</div>
+            </div>
+            <div class="stat-summary-card" id="ssFocus">
+              <div class="k">⚡ 平均专注度</div>
+              <div class="v" id="ssFocusVal">—</div>
+              <div class="hint" id="ssFocusHint">本周均值</div>
+            </div>
+            <div class="stat-summary-card" id="ssDays">
+              <div class="k">📅 打卡天数</div>
+              <div class="v" id="ssDaysVal">0</div>
+              <div class="hint" id="ssDaysHint">有记录的天数</div>
+            </div>
+            <div class="stat-summary-card" id="ssGoal">
+              <div class="k">🎯 目标达成率</div>
+              <div class="v" id="ssGoalVal">0%</div>
+              <div class="hint" id="ssGoalHint">投入目标占比</div>
+            </div>
+          </div>
+          <!-- 本周堆叠图 -->
+          <div class="sect-title" style="margin-top:6px">每日时间分配</div>
+          <div class="week-chart" id="weekChart" style="height:120px"></div>
+          <div class="legend" id="weekLegend" style="flex-direction:row;flex-wrap:wrap;gap:4px 10px"></div>
         </div>
+        <!-- 右侧：热力图 + 饼图 -->
         <div>
-          <div class="sect-title">类型占比</div>
-          <div class="donut" id="typeDonut"><div class="hole" id="typeHole"></div></div>
-          <div class="legend" id="typeLegend"></div>
+          <div class="heatmap-header" style="margin-bottom:4px">
+            <div class="heatmap-title">🔥 月度专注热力图</div>
+            <div class="heatmap-nav">
+              <button id="hmPrev">◀</button>
+              <span class="month-label" id="hmMonthLabel">2026年8月</span>
+              <button id="hmNext">▶</button>
+              <button id="hmToday">今天</button>
+            </div>
+          </div>
+          <div class="heatmap-grid" id="heatmapGrid"></div>
+          <div class="heatmap-legend" style="margin-top:6px">
+            <span>专注度:</span>
+            <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.97 0.005 240/.55),oklch(0.93 0.01 240/.4))"></div>0</div>
+            <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.85 0.05 240/.6),oklch(0.78 0.06 240/.5))"></div>1-3</div>
+            <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.68 0.09 240/.7),oklch(0.58 0.1 240/.6))"></div>4-6</div>
+            <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.62 0.11 240/.75),oklch(0.52 0.12 240/.65))"></div>7-8</div>
+            <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.58 0.13 240/.8),oklch(0.48 0.14 240/.7))"></div>9-10</div>
+          </div>
+          <!-- 类型占比 小饼图 -->
+          <div class="sect-title" style="margin-top:8px">本周类型占比</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="donut" id="typeDonut" style="width:100px;height:100px"><div class="hole" id="typeHole" style="width:64px;height:64px;font-size:10px"></div></div>
+            <div class="legend" id="typeLegend" style="flex:1;gap:3px;font-size:11px"></div>
+          </div>
         </div>
       </div>
-      <div class="sect-title" style="margin-top:18px">各大目标本周投入时长</div>
-      <div class="stat-bars" id="goalBars"></div>
-    </div>
-
-    <!-- 月度专注力热力图 玻璃卡片 -->
-    <div class="card glass">
-      <div class="heatmap-header">
-        <div class="heatmap-title">🔥 月度专注力热力图</div>
-        <div class="heatmap-nav">
-          <button id="hmPrev">◀</button>
-          <span class="month-label" id="hmMonthLabel">2026年8月</span>
-          <button id="hmNext">▶</button>
-          <button id="hmToday">今天</button>
-        </div>
-      </div>
-      <p class="desc">每日专注度（1-10分）以颜色深浅呈现，越深代表专注度越高。悬停查看详细数据。</p>
-      <div class="heatmap-grid" id="heatmapGrid"></div>
-      <div class="heatmap-legend">
-        <span>专注度:</span>
-        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.97 0.005 240/.55),oklch(0.93 0.01 240/.4))"></div>0</div>
-        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.85 0.05 240/.6),oklch(0.78 0.06 240/.5))"></div>1-2</div>
-        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.75 0.07 240/.65),oklch(0.65 0.08 240/.55))"></div>3-4</div>
-        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.68 0.09 240/.7),oklch(0.58 0.1 240/.6))"></div>5-6</div>
-        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.62 0.11 240/.75),oklch(0.52 0.12 240/.65))"></div>7-8</div>
-        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.58 0.13 240/.8),oklch(0.48 0.14 240/.7))"></div>9-10</div>
-      </div>
+      <!-- 各大目标投入 -->
+      <div class="sect-title" style="margin-top:8px">各大目标本周投入</div>
+      <div class="stat-bars" id="goalBars" style="gap:4px"></div>
     </div>
   </section>
 

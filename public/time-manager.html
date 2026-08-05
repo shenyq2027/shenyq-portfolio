@@ -324,6 +324,17 @@
   .doc-item{cursor:pointer;transition:transform .15s, box-shadow .15s}
   .doc-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
 
+  /* 阅览器内编辑表单 */
+  .modal-form{display:flex;flex-direction:column;gap:14px}
+  .modal-form .form-row{display:flex;flex-direction:column;gap:4px}
+  .modal-form .form-row-inline{display:flex;gap:10px;flex-wrap:wrap}
+  .modal-form .form-row-inline > div{flex:1;min-width:140px;display:flex;flex-direction:column;gap:4px}
+  .modal-form label{font-size:12px;color:var(--muted-fg);font-weight:600}
+  .modal-form input[type="date"],.modal-form select,.modal-form textarea{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--card);color:var(--text)}
+  .modal-form textarea{min-height:90px;line-height:1.7;resize:vertical}
+  .modal-form input:focus,.modal-form select:focus,.modal-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px oklch(0.66 0.11 240 / 0.15)}
+  .modal-form .form-hint{font-size:11px;color:var(--muted-fg);margin-top:2px}
+
   .user-summary{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
   .user-summary h3{font-size:14px;margin:0 0 6px}
   .user-summary textarea{min-height:80px;font-size:13px;line-height:1.7}
@@ -575,7 +586,8 @@
         <h3 id="readerTitle">📖 文档阅览</h3>
         <button class="modal-close" id="readerClose">×</button>
       </div>
-      <div class="modal-body">
+      <!-- 阅览模式 -->
+      <div class="modal-body" id="readerViewMode">
         <div class="modal-meta" id="readerMeta"></div>
         <div class="modal-section" id="readerRawSection">
           <h4>📝 原始内容</h4>
@@ -590,9 +602,47 @@
           <div class="modal-images" id="readerImages"></div>
         </div>
       </div>
-      <div class="modal-actions">
+      <!-- 编辑模式 -->
+      <div class="modal-body" id="readerEditMode" style="display:none">
+        <div class="modal-form">
+          <div class="form-row-inline">
+            <div>
+              <label for="editDate">📅 文档日期（用于日后检索）</label>
+              <input type="date" id="editDate">
+              <div class="form-hint">修改日期后，文档会归档到新的日期下</div>
+            </div>
+          </div>
+          <div class="form-row-inline">
+            <div>
+              <label for="editGoal">📁 大目标（主文件夹）</label>
+              <select id="editGoal">
+                <option value="">选择大目标</option>
+              </select>
+            </div>
+            <div>
+              <label for="editSub">📄 子目标（子文件夹）</label>
+              <select id="editSub">
+                <option value="">选择子目标</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="editRaw">📝 原始内容</label>
+            <textarea id="editRaw" placeholder="粘贴的链接、网页内容、公众号文字等"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="editSummary">💭 我的总结</label>
+            <textarea id="editSummary" placeholder="用自己的话总结收获……"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions" id="readerActionsView">
         <button class="btn ghost sm" id="readerEdit">✏️ 编辑</button>
         <button class="btn danger sm" id="readerDelete">🗑️ 删除</button>
+      </div>
+      <div class="modal-actions" id="readerActionsEdit" style="display:none">
+        <button class="btn ghost sm" id="readerCancel">取消</button>
+        <button class="btn primary sm" id="readerSave">💾 保存修改</button>
       </div>
     </div>
   </div>
@@ -1622,6 +1672,7 @@ function deleteDocument(id){
    每日收获 —— 文档阅览器
    ============================================================ */
 let _readerDocId=null;
+let _readerDocDate=null;
 
 function openDocReader(id){
   let doc=null, docDate=null;
@@ -1632,6 +1683,7 @@ function openDocReader(id){
   if(!doc) return;
   
   _readerDocId=id;
+  _readerDocDate=docDate;
   const g=DB.goals.find(x=>x.id===doc.categoryGoalId);
   const sub=g?.sub?.[doc.categorySubIdx];
   
@@ -1673,15 +1725,116 @@ function openDocReader(id){
     imgSection.style.display='none';
   }
   
+  // 默认显示阅览模式
+  showReaderViewMode();
+  
   // 显示模态弹窗
   $('#docReader').classList.remove('hidden');
   document.body.style.overflow='hidden';
+}
+
+function showReaderViewMode(){
+  $('#readerViewMode').style.display='';
+  $('#readerEditMode').style.display='none';
+  $('#readerActionsView').style.display='';
+  $('#readerActionsEdit').style.display='none';
+  $('#readerTitle').textContent='📖 文档阅览';
+}
+
+function showReaderEditMode(){
+  if(!_readerDocId) return;
+  
+  // 查找文档
+  let doc=null;
+  Object.entries(DB.harvest).forEach(([date, arr])=>{
+    const found=arr.find(h=>h.id===_readerDocId);
+    if(found){ doc=found; _readerDocDate=date; }
+  });
+  if(!doc) return;
+  
+  // 填充编辑表单
+  $('#editDate').value=_readerDocDate || todayStr();
+  $('#editRaw').value=doc.rawContent||'';
+  $('#editSummary').value=doc.userSummary||'';
+  
+  // 填充大目标下拉
+  const goalSel=$('#editGoal');
+  goalSel.innerHTML='<option value="">选择大目标</option>'+DB.goals.map(g=>`<option value="${g.id}">${esc(g.title)}</option>`).join('');
+  goalSel.value=doc.categoryGoalId||'';
+  
+  // 填充子目标下拉
+  fillEditSubSelect(doc.categoryGoalId, doc.categorySubIdx);
+  
+  // 切换显示
+  $('#readerViewMode').style.display='none';
+  $('#readerEditMode').style.display='';
+  $('#readerActionsView').style.display='none';
+  $('#readerActionsEdit').style.display='';
+  $('#readerTitle').textContent='✏️ 编辑文档';
+}
+
+function fillEditSubSelect(goalId, selectedSubIdx){
+  const subSel=$('#editSub');
+  if(!goalId){
+    subSel.innerHTML='<option value="">选择子目标</option>';
+    return;
+  }
+  const g=DB.goals.find(x=>x.id===goalId);
+  subSel.innerHTML='<option value="">选择子目标</option>'+ (g?.sub||[]).map((s,i)=>`<option value="${i}">${esc(s.t)}</option>`).join('');
+  if(selectedSubIdx!=null) subSel.value=String(selectedSubIdx);
+}
+
+function saveReaderEdit(){
+  if(!_readerDocId) return;
+  
+  const newDate=$('#editDate').value;
+  const goalId=$('#editGoal').value;
+  const subIdx=$('#editSub').value;
+  const raw=$('#editRaw').value;
+  const summary=$('#editSummary').value;
+  
+  if(!newDate){ toast('请选择日期'); return; }
+  if(!goalId){ toast('请选择大目标'); return; }
+  if(!raw.trim() && !summary.trim()){ toast('内容和总结至少填一项'); return; }
+  
+  // 查找并移除旧文档（从旧日期数组中）
+  let doc=null;
+  Object.entries(DB.harvest).forEach(([date, arr])=>{
+    const idx=arr.findIndex(h=>h.id===_readerDocId);
+    if(idx>=0){
+      doc=arr.splice(idx,1)[0];
+    }
+  });
+  if(!doc){ toast('文档不存在'); return; }
+  
+  // 更新文档内容
+  doc.rawContent=raw.trim();
+  doc.userSummary=summary.trim();
+  doc.categoryGoalId=goalId;
+  doc.categorySubIdx=subIdx?parseInt(subIdx):null;
+  doc.updatedAt=new Date().toISOString();
+  
+  // 放入新日期数组
+  if(!DB.harvest[newDate]) DB.harvest[newDate]=[];
+  DB.harvest[newDate].push(doc);
+  
+  Store.set(DB);
+  _readerDocDate=newDate;
+  
+  // 重新渲染阅览模式
+  openDocReader(_readerDocId);
+  renderDocumentList();
+  renderFolderTree(_docViewFilter.goalId, _docViewFilter.subIdx);
+  toast('已保存修改');
 }
 
 function closeDocReader(){
   $('#docReader').classList.add('hidden');
   document.body.style.overflow='';
   _readerDocId=null;
+  _readerDocDate=null;
+  // 重置为阅览模式
+  showReaderViewMode();
 }
 
 /* ============================================================
@@ -1912,10 +2065,22 @@ document.addEventListener('click', e=>{
   if(t.id==='readerClose'){ closeDocReader(); return; }
   // 点击遮罩层关闭
   if(t.id==='docReader'){ closeDocReader(); return; }
-  // 编辑按钮
-  if(t.id==='readerEdit' && _readerDocId){ closeDocReader(); editDocument(_readerDocId); return; }
+  // 编辑按钮（切换到编辑模式）
+  if(t.id==='readerEdit' && _readerDocId){ showReaderEditMode(); return; }
+  // 取消按钮（返回阅览模式）
+  if(t.id==='readerCancel'){ showReaderViewMode(); openDocReader(_readerDocId); return; }
+  // 保存按钮
+  if(t.id==='readerSave'){ saveReaderEdit(); return; }
   // 删除按钮
   if(t.id==='readerDelete' && _readerDocId){ deleteDocument(_readerDocId); return; }
+});
+
+// change 事件（大目标切换时更新子目标下拉）
+document.addEventListener('change', e=>{
+  const t=e.target;
+  if(t.id==='editGoal'){
+    fillEditSubSelect(t.value, null);
+  }
 });
 
 // ESC 键关闭

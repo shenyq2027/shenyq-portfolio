@@ -1341,6 +1341,7 @@ function renderStats(){
    ============================================================ */
 function renderFolderTree(selectedGoalId, selectedSubIdx){
   const tree=$('#folderTree');
+  if(!tree) return;
   if(!DB.goals.length){ tree.innerHTML='<div class="muted" style="font-size:12px;padding:8px">暂无大目标，请先在「大目标管理」里添加</div>'; return; }
   // 统计每个目标下的收获数量
   const counts={};
@@ -1381,23 +1382,27 @@ function renderHarvest(){
   renderFolderTree();
   renderHarvestGoalSelect();
   renderMindmap();
-  // 恢复 AI 配置
+  // 恢复 AI 配置（元素可能不存在，跳过）
   const cfg=DB.aiConfig||{};
-  $('#aiBaseUrl').value=cfg.baseUrl||'';
-  $('#aiApiKey').value=cfg.apiKey||'';
-  $('#aiModel').value=cfg.model||'';
+  if($('#aiBaseUrl')) $('#aiBaseUrl').value=cfg.baseUrl||'';
+  if($('#aiApiKey')) $('#aiApiKey').value=cfg.apiKey||'';
+  if($('#aiModel')) $('#aiModel').value=cfg.model||'';
   updateAiButton();
 }
 function renderHarvestGoalSelect(){
   const goalSel=$('#harvestGoal');
+  const subSel=$('#harvestSub');
+  if(!goalSel || !subSel) return;
   goalSel.innerHTML='<option value="">选择大目标（主文件夹）</option>'+DB.goals.map(g=>`<option value="${g.id}">${esc(g.title)}</option>`).join('');
-  $('#harvestSub').innerHTML='<option value="">选择子目标（子文件夹）</option>';
+  subSel.innerHTML='<option value="">选择子目标（子文件夹）</option>';
 }
 function updateAiButton(){
+  const btn=$('#aiExtract');
+  if(!btn) return;
   const cfg=DB.aiConfig||{};
   const hasConfig=cfg.baseUrl && cfg.apiKey && cfg.model;
-  $('#aiExtract').disabled=!hasConfig;
-  $('#aiExtract').title=hasConfig?'调用 AI 提炼观点':'请先配置 AI API';
+  btn.disabled=!hasConfig;
+  btn.title=hasConfig?'调用 AI 提炼观点':'请先配置 AI API';
 }
 
 /* ============================================================
@@ -1413,6 +1418,7 @@ function renderMindmap(){
     // 初始化一个根节点
     mindmapNodes=[{id:uid(),text:'中心主题',x:200,y:140,parentId:null}];
   }
+  if(!wrap || !svg) return;
   wrap.innerHTML=mindmapNodes.map(n=>`
     <div class="mind-node ${!n.parentId?'root':''} ${mindmapSelected===n.id?'selected':''}" data-id="${n.id}" style="left:${n.x}px;top:${n.y}px">
       <input value="${esc(n.text)}" data-id="${n.id}">
@@ -1429,20 +1435,27 @@ function renderMindmap(){
   svg.innerHTML=lines;
   // 绑定拖拽
   $$('.mind-node').forEach(el=>{
+    // 点击选中（不拖拽）
     el.addEventListener('mousedown', e=>{
       if(e.target.tagName==='INPUT') return;
       const id=el.dataset.id;
+      // 只更新选中状态，不重新渲染
       mindmapSelected=id;
-      renderMindmap();
+      $$('.mind-node').forEach(p=>p.classList.toggle('selected', p.dataset.id===mindmapSelected));
+      // 拖拽逻辑
       const rect=el.getBoundingClientRect();
       const wrapRect=$('#mindmapWrap').getBoundingClientRect();
       const ox=e.clientX-rect.left, oy=e.clientY-rect.top;
       function onmove(ev){
         const nx=ev.clientX-wrapRect.left-ox, ny=ev.clientY-wrapRect.top-oy;
         const node=mindmapNodes.find(p=>p.id===id);
-        if(node){ node.x=Math.max(0,Math.min(nx,wrapRect.width-120)); node.y=Math.max(0,Math.min(ny,wrapRect.height-32)); }
-        el.style.left=node.x+'px'; el.style.top=node.y+'px';
-        renderMindmapLines();
+        if(node){ 
+          node.x=Math.max(0,Math.min(nx,wrapRect.width-120)); 
+          node.y=Math.max(0,Math.min(ny,wrapRect.height-32)); 
+          el.style.left=node.x+'px'; 
+          el.style.top=node.y+'px';
+          renderMindmapLines();
+        }
       }
       function onup(){ document.removeEventListener('mousemove',onmove); document.removeEventListener('mouseup',onup); }
       document.addEventListener('mousemove',onmove);
@@ -1471,9 +1484,14 @@ function renderMindmapLines(){
 }
 
 function bindHarvestEvents(){
+  // 安全绑定函数
+  function safeBind(id, event, handler){
+    const el=$(id);
+    if(el) el.addEventListener(event, handler);
+  }
   // AI 配置变更
   ['aiBaseUrl','aiApiKey','aiModel'].forEach(id=>{
-    $(id).addEventListener('input', ()=>{
+    safeBind(id, 'input', ()=>{
       DB.aiConfig.baseUrl=$('#aiBaseUrl').value.trim();
       DB.aiConfig.apiKey=$('#aiApiKey').value.trim();
       DB.aiConfig.model=$('#aiModel').value.trim();
@@ -1481,21 +1499,21 @@ function bindHarvestEvents(){
     });
   });
   // AI 提炼（预留）
-  $('#aiExtract').addEventListener('click', ()=>{ toast('AI 提炼功能尚未接入，请稍后'); });
-  $('#aiRefresh').addEventListener('click', ()=>{ toast('AI 提炼功能尚未接入，请稍后'); });
+  safeBind('aiExtract', 'click', ()=>{ toast('AI 提炼功能尚未接入，请稍后'); });
+  safeBind('aiRefresh', 'click', ()=>{ toast('AI 提炼功能尚未接入，请稍后'); });
   // 思维导图操作
-  $('#mindAddNode').addEventListener('click', ()=>{
+  safeBind('mindAddNode', 'click', ()=>{
     mindmapNodes.push({id:uid(),text:'新节点',x:100+Math.random()*200,y:80+Math.random()*120,parentId:null});
     renderMindmap();
   });
-  $('#mindAddChild').addEventListener('click', ()=>{
+  safeBind('mindAddChild', 'click', ()=>{
     if(!mindmapSelected){ toast('请先选中一个节点'); return; }
     const parent=mindmapNodes.find(p=>p.id===mindmapSelected);
     if(!parent) return;
     mindmapNodes.push({id:uid(),text:'子节点',x:parent.x+120,y:parent.y+40,parentId:parent.id});
     renderMindmap();
   });
-  $('#mindDelNode').addEventListener('click', ()=>{
+  safeBind('mindDelNode', 'click', ()=>{
     if(!mindmapSelected){ toast('请先选中节点'); return; }
     // 删除节点及其子节点
     const toDel=[mindmapSelected];
@@ -1505,20 +1523,22 @@ function bindHarvestEvents(){
     mindmapSelected=null;
     renderMindmap();
   });
-  $('#mindReset').addEventListener('click', ()=>{
+  safeBind('mindReset', 'click', ()=>{
     // 简单布局：根节点居中，子节点散开
     const root=mindmapNodes.find(n=>!n.parentId);
     if(root){ root.x=200; root.y=140; }
     const children=mindmapNodes.filter(n=>n.parentId);
-    children.forEach((n,i)=>{
-      const angle=(i/children.length)*Math.PI*2;
-      n.x=root.x+Math.cos(angle)*150;
-      n.y=root.y+Math.sin(angle)*80;
-    });
+    if(children.length){
+      children.forEach((n,i)=>{
+        const angle=(i/children.length)*Math.PI*2;
+        n.x=root.x+Math.cos(angle)*150;
+        n.y=root.y+Math.sin(angle)*80;
+      });
+    }
     renderMindmap();
   });
   // 保存收获
-  $('#harvestSave').addEventListener('click', ()=>{
+  safeBind('harvestSave', 'click', ()=>{
     const goalId=$('#harvestGoal').value;
     const subIdx=$('#harvestSub').value;
     if(!goalId){ toast('请选择大目标'); return; }
@@ -1545,13 +1565,13 @@ function bindHarvestEvents(){
     toast('已保存到类别文件夹');
   });
   // 大目标选择联动子目标
-  $('#harvestGoal').addEventListener('change', ()=>{
+  safeBind('harvestGoal', 'change', ()=>{
     const g=DB.goals.find(x=>x.id===$('#harvestGoal').value);
     if(!g) return;
     $('#harvestSub').innerHTML='<option value="">选择子目标（子文件夹）</option>'+ (g.sub||[]).map((s,i)=>`<option value="${i}">${esc(s.t)}</option>`).join('');
   });
   // 文件夹树点击
-  $('#folderTree').addEventListener('click', e=>{
+  safeBind('folderTree', 'click', e=>{
     const head=e.target.closest('.folder-head');
     const sub=e.target.closest('.subfolder');
     if(head){ $('#harvestGoal').value=head.dataset.gid; $('#harvestGoal').dispatchEvent(new Event('change')); }
@@ -1567,7 +1587,14 @@ function switchTab(name){
   $$('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
   if(name==='archive') renderArchive();
   if(name==='stats') renderStats();
-  if(name==='harvest') renderHarvest();
+  if(name==='harvest'){
+    // 确保事件绑定只执行一次
+    if(!window._harvestBound){
+      bindHarvestEvents();
+      window._harvestBound=true;
+    }
+    renderHarvest();
+  }
 }
 $('#tabs').addEventListener('click', e=>{ if(e.target.dataset.tab) switchTab(e.target.dataset.tab); });
 window.switchTab=switchTab;
@@ -1594,7 +1621,8 @@ function refreshAll(){
 $('#dateSel').value=currentDate;
 $('#archFrom').value=daysAgoStr(13);
 $('#archTo').value=todayStr();
-bindRecordEvents(); bindGoalEvents(); bindResourceEvents(); bindArchiveEvents(); bindInsightEvents(); bindHarvestEvents();
+bindRecordEvents(); bindGoalEvents(); bindResourceEvents(); bindArchiveEvents(); bindInsightEvents();
+// harvest 事件在切换到对应 tab 时懒绑定，确保 DOM 已就绪
 refreshAll();
 </script>
 </body>

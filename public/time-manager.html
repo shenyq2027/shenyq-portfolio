@@ -960,13 +960,15 @@ const Store = {
     if(!d.insights) d.insights={};
     if(!d.harvest) d.harvest={};
     if(!d.aiConfig) d.aiConfig={baseUrl:'',apiKey:'',model:''};
-    // 兼容：确保每个子目标都有 steps 数组
-    d.goals.forEach(g=>(g.sub||[]).forEach(s=>{ if(!Array.isArray(s.steps)) s.steps=[]; }));
+    // 兼容：确保每个子目标都有 steps 数组和 due 字段
+    d.goals.forEach(g=>(g.sub||[]).forEach(s=>{ if(!Array.isArray(s.steps)) s.steps=[]; if(!s.due) s.due=''; }));
     return d;
   },
   set(d){ this.save(d); }
 };
 let DB = Store.get();
+// 加载时同步：有步骤的子目标 done 状态由步骤决定
+DB.goals.forEach(g=>(g.sub||[]).forEach(s=>syncSubDone(s)));
 
 /* ---------- 工具 ---------- */
 const $ = s => document.querySelector(s);
@@ -982,6 +984,28 @@ function weekRange(dateStr){ const d=new Date(dateStr+'T00:00:00'); const day=(d
 function daysAgoStr(n){ const d=new Date(); d.setDate(d.getDate()-n); return fmt(d); }
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1600); }
 function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- 目标完成率计算 ----------
+   规则：
+   · 子目标完成率 = 有步骤时按步骤完成比例；无步骤时看 done（0% 或 100%）
+   · 大目标完成率 = 各子目标完成率均值（权重相同）
+   · 步骤全部完成时自动置 sub.done=true；否则 false
+------------------------------------------------ */
+function subCompletion(s){
+  if(!s) return 0;
+  const steps=s.steps||[];
+  if(steps.length) return Math.round(steps.filter(x=>x.done).length/steps.length*100);
+  return s.done?100:0;
+}
+function goalCompletion(g){
+  if(!g||!g.sub||!g.sub.length) return 0;
+  return Math.round(g.sub.reduce((a,s)=>a+subCompletion(s),0)/g.sub.length);
+}
+function syncSubDone(s){
+  // 步骤全完成 → done=true；存在未完成步骤 → done=false；无步骤则保留用户手设状态
+  const steps=s.steps||[];
+  if(steps.length){ s.done = steps.every(x=>x.done); }
+}
 
 let currentDate = todayStr();
 
@@ -1106,9 +1130,11 @@ function bindRecordEvents(){
 function renderGoals(){
   const list = $('#goalList');
   list.innerHTML = DB.goals.map(g=>{
-    const total = g.sub.length, done = g.sub.filter(s=>s.done).length;
-    const pct = total? Math.round(done/total*100):0;
+    const total = g.sub.length;
+    const doneSubs = g.sub.filter(s=>s.done).length;
+    const pct = goalCompletion(g);                // 大目标完成率（子目标完成率均值）
     const prio = PRIO[g.priority]||PRIO.mid;
+    const todayYM = todayStr().slice(0,7);        // YYYY-MM 用于判断期限是否逾期
     return `
     <div class="goal" data-gid="${g.id}">
       <div class="goal-head">
@@ -1124,16 +1150,26 @@ function renderGoals(){
       </div>
       <input value="${esc(g.desc)}" data-g="desc" placeholder="一句话描述这个目标" style="width:100%;margin-top:6px;border:none;background:transparent;color:var(--muted-fg);padding:3px 0">
       <div class="progress"><span style="width:${pct}%"></span></div>
-      <div style="font-size:11.5px;color:var(--muted-fg);margin-top:4px">子目标进度 ${done}/${total} · ${pct}%</div>
+      <div style="font-size:11.5px;color:var(--muted-fg);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap">
+        <span>子目标 ${doneSubs}/${total} 完成</span>
+        <span>平均完成率 <b style="color:var(--primary)">${pct}%</b></span>
+      </div>
       <div class="subgoals">
         ${g.sub.map((s,i)=>{
           const steps = s.steps||[];
           const sDone = steps.filter(x=>x.done).length;
+          const sp = subCompletion(s);
+          const overdue = s.due && s.due < todayYM && sp<100;
           return `
           <div class="sg-wrap">
-            <div class="sg ${s.done?'done':''}">
+            <div class="sg ${s.done?'done':''}" style="flex-wrap:wrap;gap:6px">
               <input type="checkbox" data-si="${i}" ${s.done?'checked':''}>
-              <input class="lab" value="${esc(s.t)}" data-si="${i}" data-sf="t" style="border:none;background:transparent;flex:1">
+              <input class="lab" value="${esc(s.t)}" data-si="${i}" data-sf="t" style="border:none;background:transparent;flex:1;min-width:120px">
+              <span class="sg-meta" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted-fg)">
+                <span class="sg-pct" style="padding:1px 7px;border-radius:999px;font-weight:600;${sp>=100?'background:oklch(0.62 0.12 160/.15);color:var(--ok)':sp>0?'background:var(--accent);color:var(--primary)':'background:var(--muted);color:var(--muted-fg)'}">${sp}%</span>
+                <input type="month" value="${esc(s.due||'')}" data-si="${i}" data-sf="due" title="设置截止月份" style="width:auto;padding:1px 5px;font-size:11px;border-radius:6px;${overdue?'border-color:var(--danger);color:var(--danger)':''}">
+                ${overdue?'<span style="color:var(--danger);font-size:10px">逾期</span>':''}
+              </span>
               <button class="btn ghost sm" data-sact="addstep" data-si="${i}" title="为该子目标添加行动步骤">＋ 行动</button>
               <button class="btn ghost sm" data-sact="del" data-si="${i}">✕</button>
             </div>
@@ -1172,7 +1208,10 @@ function bindGoalEvents(){
         const sti=+e.target.dataset.sti;
         if(sub.steps[sti]) sub.steps[sti].t=e.target.value;
       }else{
-        sub.t=e.target.value;
+        // 子目标字段：t（描述）或 due（截止月份）
+        const sf=e.target.dataset.sf;
+        if(sf==='due'){ sub.due=e.target.value; }
+        else { sub.t=e.target.value; }
       }
       Store.set(DB);
     }
@@ -1181,15 +1220,26 @@ function bindGoalEvents(){
     const gdiv=e.target.closest('.goal'); if(!gdiv) return;
     const g=DB.goals.find(x=>x.id===gdiv.dataset.gid); if(!g) return;
     if(e.target.dataset.g==='priority'){ g.priority=e.target.value; Store.set(DB); renderGoals(); return; }
+    // 月份期限变更（month input 主要触发 change）
+    if(e.target.type==='month'){
+      const si=+e.target.dataset.si; const sub=g.sub[si]; if(!sub) return;
+      sub.due=e.target.value; Store.set(DB); renderGoals(); return;
+    }
     if(e.target.type==='checkbox'){
       const si=+e.target.dataset.si; const sub=g.sub[si]; if(!sub) return;
       if(e.target.dataset.sti!==undefined){
         sub.steps=sub.steps||[];
         const sti=+e.target.dataset.sti;
         if(sub.steps[sti]) sub.steps[sti].done=e.target.checked;
+        syncSubDone(sub);                       // 同步子目标完成状态
         Store.set(DB); renderGoals();
       }else{
-        sub.done=e.target.checked; Store.set(DB); renderGoals();
+        // 子目标复选框：若有步骤，则联动所有步骤完成状态
+        sub.done=e.target.checked;
+        if(sub.steps && sub.steps.length){
+          sub.steps.forEach(st=>{ st.done=e.target.checked; });
+        }
+        Store.set(DB); renderGoals();
       }
     }
   });
@@ -1197,7 +1247,7 @@ function bindGoalEvents(){
     const gdiv=e.target.closest('.goal'); if(!gdiv) return;
     const g=DB.goals.find(x=>x.id===gdiv.dataset.gid); if(!g) return;
     const act=e.target.dataset.gact;
-    if(act==='addsub'){ g.sub.push({t:'新子目标',done:false,steps:[]}); Store.set(DB); renderGoals(); }
+    if(act==='addsub'){ g.sub.push({t:'新子目标',done:false,steps:[],due:''}); Store.set(DB); renderGoals(); }
     if(act==='del'){ if(!confirm(`删除大目标「${g.title}」？`)) return; DB.goals=DB.goals.filter(x=>x.id!==g.id); Store.set(DB); renderGoals(); renderRecords(); }
     const sact=e.target.dataset.sact;
     if(sact==='del'){ const si=+e.target.dataset.si; g.sub.splice(si,1); Store.set(DB); renderGoals(); }
@@ -1205,6 +1255,7 @@ function bindGoalEvents(){
       const si=+e.target.dataset.si; const sub=g.sub[si]; if(!sub) return;
       sub.steps=sub.steps||[];
       sub.steps.push({t:'新行动步骤',done:false});
+      syncSubDone(sub);                            // 新增未完成步骤 → sub.done 变 false
       Store.set(DB); renderGoals();
       // 展开并聚焦新增输入框
       const details=gdiv.querySelectorAll('details.steps-details')[si];
@@ -1215,7 +1266,8 @@ function bindGoalEvents(){
     if(sact==='delstep'){
       const si=+e.target.dataset.si; const sti=+e.target.dataset.sti;
       const sub=g.sub[si]; if(!sub||!sub.steps) return;
-      sub.steps.splice(sti,1); Store.set(DB); renderGoals();
+      sub.steps.splice(sti,1); syncSubDone(sub);  // 删除后重新判定 sub.done
+      Store.set(DB); renderGoals();
     }
   });
   $('#addGoal').addEventListener('click', ()=>{

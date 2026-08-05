@@ -1900,17 +1900,12 @@ function bindHarvestEvents(){
     }
   });
   
-  // ESC 键关闭模态弹窗
-  document.addEventListener('keydown', e=>{
-    if(e.key==='Escape' && !$('#docReader').classList.contains('hidden')){
-      closeDocReader();
-    }
-  });
 }
 
 /* ============================================================
    模态弹窗全局事件绑定（页面加载时立即绑定）
    ============================================================ */
+// 点击事件
 document.addEventListener('click', e=>{
   const t=e.target;
   // 关闭按钮
@@ -1921,6 +1916,13 @@ document.addEventListener('click', e=>{
   if(t.id==='readerEdit' && _readerDocId){ closeDocReader(); editDocument(_readerDocId); return; }
   // 删除按钮
   if(t.id==='readerDelete' && _readerDocId){ deleteDocument(_readerDocId); return; }
+});
+
+// ESC 键关闭
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && !$('#docReader').classList.contains('hidden')){
+    closeDocReader();
+  }
 });
 
 /* ============================================================

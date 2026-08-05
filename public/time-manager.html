@@ -1906,20 +1906,22 @@ function bindHarvestEvents(){
       closeDocReader();
     }
   });
-  
-  // 模态弹窗的全局事件处理（因为模态弹窗不在 panel-harvest 内）
-  document.addEventListener('click', e=>{
-    const t=e.target;
-    // 关闭按钮
-    if(t.id==='readerClose'){ closeDocReader(); return; }
-    // 点击遮罩层关闭
-    if(t.id==='docReader'){ closeDocReader(); return; }
-    // 编辑按钮
-    if(t.id==='readerEdit' && _readerDocId){ closeDocReader(); editDocument(_readerDocId); return; }
-    // 删除按钮
-    if(t.id==='readerDelete' && _readerDocId){ deleteDocument(_readerDocId); return; }
-  });
 }
+
+/* ============================================================
+   模态弹窗全局事件绑定（页面加载时立即绑定）
+   ============================================================ */
+document.addEventListener('click', e=>{
+  const t=e.target;
+  // 关闭按钮
+  if(t.id==='readerClose'){ closeDocReader(); return; }
+  // 点击遮罩层关闭
+  if(t.id==='docReader'){ closeDocReader(); return; }
+  // 编辑按钮
+  if(t.id==='readerEdit' && _readerDocId){ closeDocReader(); editDocument(_readerDocId); return; }
+  // 删除按钮
+  if(t.id==='readerDelete' && _readerDocId){ deleteDocument(_readerDocId); return; }
+});
 
 /* ============================================================
    Tab 切换

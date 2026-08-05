@@ -1863,13 +1863,6 @@ function bindHarvestEvents(){
     const docItem=t.closest('.doc-item');
     if(docItem && !editBtn && !delBtn){ openDocReader(docItem.dataset.id); return; }
     
-    // 模态弹窗操作
-    if(t.id==='readerClose'){ closeDocReader(); return; }
-    if(t.id==='readerEdit' && _readerDocId){ closeDocReader(); editDocument(_readerDocId); return; }
-    if(t.id==='readerDelete' && _readerDocId){ deleteDocument(_readerDocId); return; }
-    // 点击遮罩层关闭（点击的是 overlay 本身而不是子元素）
-    if(t.id==='docReader'){ closeDocReader(); return; }
-    
     // 图片删除
     const imgDel=t.closest('.image-del');
     if(imgDel){
@@ -1912,6 +1905,19 @@ function bindHarvestEvents(){
     if(e.key==='Escape' && !$('#docReader').classList.contains('hidden')){
       closeDocReader();
     }
+  });
+  
+  // 模态弹窗的全局事件处理（因为模态弹窗不在 panel-harvest 内）
+  document.addEventListener('click', e=>{
+    const t=e.target;
+    // 关闭按钮
+    if(t.id==='readerClose'){ closeDocReader(); return; }
+    // 点击遮罩层关闭
+    if(t.id==='docReader'){ closeDocReader(); return; }
+    // 编辑按钮
+    if(t.id==='readerEdit' && _readerDocId){ closeDocReader(); editDocument(_readerDocId); return; }
+    // 删除按钮
+    if(t.id==='readerDelete' && _readerDocId){ deleteDocument(_readerDocId); return; }
   });
 }
 

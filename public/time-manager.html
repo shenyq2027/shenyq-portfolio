@@ -1588,11 +1588,9 @@ function switchTab(name){
   if(name==='archive') renderArchive();
   if(name==='stats') renderStats();
   if(name==='harvest'){
-    // 确保事件绑定只执行一次
-    if(!window._harvestBound){
-      bindHarvestEvents();
-      window._harvestBound=true;
-    }
+    // 每次切换都重新绑定（确保事件正确绑定）
+    bindHarvestEvents();
+    window._harvestBound=true;
     renderHarvest();
   }
 }

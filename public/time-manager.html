@@ -300,6 +300,30 @@
   /* 导出按钮组 */
   .export-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 
+  /* 文档阅览模态弹窗 */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s}
+  .modal-overlay.hidden{display:none}
+  .modal-content{background:var(--card);border-radius:var(--radius);max-width:700px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:slideUp .25s}
+  .modal-header{position:sticky;top:0;background:var(--card);padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:1}
+  .modal-header h3{margin:0;font-size:16px}
+  .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted-fg);padding:0 6px}
+  .modal-close:hover{color:var(--primary)}
+  .modal-body{padding:20px}
+  .modal-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:10px;background:var(--muted);border-radius:8px;font-size:12px;color:var(--muted-fg)}
+  .modal-meta span{display:inline-flex;align-items:center;gap:4px}
+  .modal-section{margin-bottom:18px}
+  .modal-section h4{font-size:13px;color:var(--muted-fg);margin:0 0 8px;display:flex;align-items:center;gap:6px}
+  .modal-section .content{font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--text)}
+  .modal-images{display:flex;flex-wrap:wrap;gap:10px}
+  .modal-images img{max-width:100%;max-height:300px;border-radius:8px;border:1px solid var(--border);cursor:zoom-in}
+  .modal-actions{display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);justify-content:flex-end}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* 文档列表卡片可点击样式 */
+  .doc-item{cursor:pointer;transition:transform .15s, box-shadow .15s}
+  .doc-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+
   .user-summary{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
   .user-summary h3{font-size:14px;margin:0 0 6px}
   .user-summary textarea{min-height:80px;font-size:13px;line-height:1.7}
@@ -543,6 +567,35 @@
       </main>
     </div>
   </section>
+
+  <!-- 文档阅览模态弹窗 -->
+  <div class="modal-overlay hidden" id="docReader">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="readerTitle">📖 文档阅览</h3>
+        <button class="modal-close" id="readerClose">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-meta" id="readerMeta"></div>
+        <div class="modal-section" id="readerRawSection">
+          <h4>📝 原始内容</h4>
+          <div class="content" id="readerRaw"></div>
+        </div>
+        <div class="modal-section" id="readerSummarySection">
+          <h4>💭 我的总结</h4>
+          <div class="content" id="readerSummary"></div>
+        </div>
+        <div class="modal-section" id="readerImagesSection" style="display:none">
+          <h4>📷 图片</h4>
+          <div class="modal-images" id="readerImages"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost sm" id="readerEdit">✏️ 编辑</button>
+        <button class="btn danger sm" id="readerDelete">🗑️ 删除</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="scenery-foot">
     <svg viewBox="0 0 1180 40" preserveAspectRatio="none" aria-hidden="true">
@@ -1561,7 +1614,74 @@ function deleteDocument(id){
   Store.set(DB);
   renderDocumentList();
   renderFolderTree(_docViewFilter.goalId, _docViewFilter.subIdx);
+  closeDocReader();
   toast('已删除');
+}
+
+/* ============================================================
+   每日收获 —— 文档阅览器
+   ============================================================ */
+let _readerDocId=null;
+
+function openDocReader(id){
+  let doc=null, docDate=null;
+  Object.entries(DB.harvest).forEach(([date, arr])=>{
+    const found=arr.find(h=>h.id===id);
+    if(found){ doc=found; docDate=date; }
+  });
+  if(!doc) return;
+  
+  _readerDocId=id;
+  const g=DB.goals.find(x=>x.id===doc.categoryGoalId);
+  const sub=g?.sub?.[doc.categorySubIdx];
+  
+  // 标题
+  $('#readerTitle').textContent='📖 文档阅览';
+  
+  // 元信息
+  $('#readerMeta').innerHTML = `
+    <span>📅 ${docDate}</span>
+    <span>🕐 ${new Date(doc.createdAt).toLocaleString('zh-CN')}</span>
+    <span>📁 ${esc(g?.title||'未分类')}</span>
+    ${sub?`<span>📄 ${esc(sub.t)}</span>`:''}
+  `;
+  
+  // 原始内容
+  const rawSection=$('#readerRawSection');
+  if(doc.rawContent){
+    rawSection.style.display='';
+    $('#readerRaw').textContent=doc.rawContent;
+  } else {
+    rawSection.style.display='none';
+  }
+  
+  // 用户总结
+  const summarySection=$('#readerSummarySection');
+  if(doc.userSummary){
+    summarySection.style.display='';
+    $('#readerSummary').textContent=doc.userSummary;
+  } else {
+    summarySection.style.display='none';
+  }
+  
+  // 图片
+  const imgSection=$('#readerImagesSection');
+  if(doc.images && doc.images.length){
+    imgSection.style.display='';
+    $('#readerImages').innerHTML=doc.images.map(src=>`<img src="${src}" alt="image">`).join('');
+  } else {
+    imgSection.style.display='none';
+  }
+  
+  // 显示模态弹窗
+  $('#docReader').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+
+function closeDocReader(){
+  $('#docReader').classList.add('hidden');
+  document.body.style.overflow='';
+  _readerDocId=null;
 }
 
 /* ============================================================
@@ -1733,11 +1853,22 @@ function bindHarvestEvents(){
       renderDocumentList();
     }
     
-    // 文档操作
+    // 文档操作（列表中的按钮）
     const editBtn=t.closest('.doc-edit');
     if(editBtn){ editDocument(editBtn.dataset.id); return; }
     const delBtn=t.closest('.doc-delete');
     if(delBtn){ deleteDocument(delBtn.dataset.id); return; }
+    
+    // 点击文档卡片打开阅览器（排除按钮点击）
+    const docItem=t.closest('.doc-item');
+    if(docItem && !editBtn && !delBtn){ openDocReader(docItem.dataset.id); return; }
+    
+    // 模态弹窗操作
+    if(t.id==='readerClose'){ closeDocReader(); return; }
+    if(t.id==='readerEdit' && _readerDocId){ closeDocReader(); editDocument(_readerDocId); return; }
+    if(t.id==='readerDelete' && _readerDocId){ deleteDocument(_readerDocId); return; }
+    // 点击遮罩层关闭（点击的是 overlay 本身而不是子元素）
+    if(t.id==='docReader'){ closeDocReader(); return; }
     
     // 图片删除
     const imgDel=t.closest('.image-del');
@@ -1773,6 +1904,13 @@ function bindHarvestEvents(){
     }
     if(t.id==='imageInput'){
       if(t.files.length){ handleImageUpload(t.files); t.value=''; }
+    }
+  });
+  
+  // ESC 键关闭模态弹窗
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape' && !$('#docReader').classList.contains('hidden')){
+      closeDocReader();
     }
   });
 }

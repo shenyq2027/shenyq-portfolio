@@ -1408,25 +1408,25 @@ function updateAiButton(){
 /* ============================================================
    每日收获 —— 思维导图
    ============================================================ */
-let mindmapNodes=[]; // [{id,text,x,y,parentId}]
+let _mindmapNodes=[]; // [{id,text,x,y,parentId}] 重命名避免与 DOM id 冲突
 let mindmapSelected=null;
 
 function renderMindmap(){
   const wrap=$('#mindmapNodes');
   const svg=$('#mindmapLines');
-  if(!mindmapNodes.length){
+  if(!_mindmapNodes.length){
     // 初始化一个根节点
-    mindmapNodes=[{id:uid(),text:'中心主题',x:200,y:140,parentId:null}];
+    _mindmapNodes=[{id:uid(),text:'中心主题',x:200,y:140,parentId:null}];
   }
   if(!wrap || !svg) return;
-  wrap.innerHTML=mindmapNodes.map(n=>`
+  wrap.innerHTML=_mindmapNodes.map(n=>`
     <div class="mind-node ${!n.parentId?'root':''} ${mindmapSelected===n.id?'selected':''}" data-id="${n.id}" style="left:${n.x}px;top:${n.y}px">
       <input value="${esc(n.text)}" data-id="${n.id}">
     </div>
   `).join('');
   // 画连线
-  const lines=mindmapNodes.filter(n=>n.parentId).map(n=>{
-    const parent=mindmapNodes.find(p=>p.id===n.parentId);
+  const lines=_mindmapNodes.filter(n=>n.parentId).map(n=>{
+    const parent=_mindmapNodes.find(p=>p.id===n.parentId);
     if(!parent) return '';
     const x1=parent.x+60, y1=parent.y+16;
     const x2=n.x+60, y2=n.y+16;
@@ -1448,7 +1448,7 @@ function renderMindmap(){
       const ox=e.clientX-rect.left, oy=e.clientY-rect.top;
       function onmove(ev){
         const nx=ev.clientX-wrapRect.left-ox, ny=ev.clientY-wrapRect.top-oy;
-        const node=mindmapNodes.find(p=>p.id===id);
+        const node=_mindmapNodes.find(p=>p.id===id);
         if(node){ 
           node.x=Math.max(0,Math.min(nx,wrapRect.width-120)); 
           node.y=Math.max(0,Math.min(ny,wrapRect.height-32)); 
@@ -1462,7 +1462,7 @@ function renderMindmap(){
       document.addEventListener('mouseup',onup);
     });
     el.querySelector('input').addEventListener('input', e=>{
-      const node=mindmapNodes.find(p=>p.id===el.dataset.id);
+      const node=_mindmapNodes.find(p=>p.id===el.dataset.id);
       if(node) node.text=e.target.value;
     });
     el.querySelector('input').addEventListener('focus', ()=>{
@@ -1473,8 +1473,8 @@ function renderMindmap(){
 }
 function renderMindmapLines(){
   const svg=$('#mindmapLines');
-  const lines=mindmapNodes.filter(n=>n.parentId).map(n=>{
-    const parent=mindmapNodes.find(p=>p.id===n.parentId);
+  const lines=_mindmapNodes.filter(n=>n.parentId).map(n=>{
+    const parent=_mindmapNodes.find(p=>p.id===n.parentId);
     if(!parent) return '';
     const x1=parent.x+60, y1=parent.y+16;
     const x2=n.x+60, y2=n.y+16;
@@ -1503,14 +1503,14 @@ function bindHarvestEvents(){
   safeBind('aiRefresh', 'click', ()=>{ toast('AI 提炼功能尚未接入，请稍后'); });
   // 思维导图操作
   safeBind('mindAddNode', 'click', ()=>{
-    mindmapNodes.push({id:uid(),text:'新节点',x:100+Math.random()*200,y:80+Math.random()*120,parentId:null});
+    _mindmapNodes.push({id:uid(),text:'新节点',x:100+Math.random()*200,y:80+Math.random()*120,parentId:null});
     renderMindmap();
   });
   safeBind('mindAddChild', 'click', ()=>{
     if(!mindmapSelected){ toast('请先选中一个节点'); return; }
-    const parent=mindmapNodes.find(p=>p.id===mindmapSelected);
+    const parent=_mindmapNodes.find(p=>p.id===mindmapSelected);
     if(!parent) return;
-    mindmapNodes.push({id:uid(),text:'子节点',x:parent.x+120,y:parent.y+40,parentId:parent.id});
+    _mindmapNodes.push({id:uid(),text:'子节点',x:parent.x+120,y:parent.y+40,parentId:parent.id});
     renderMindmap();
   });
   safeBind('mindDelNode', 'click', ()=>{
@@ -1518,16 +1518,16 @@ function bindHarvestEvents(){
     // 删除节点及其子节点
     const toDel=[mindmapSelected];
     let added=true;
-    while(added){ added=false; mindmapNodes.forEach(n=>{ if(n.parentId && toDel.includes(n.parentId) && !toDel.includes(n.id)){ toDel.push(n.id); added=true; } }); }
-    mindmapNodes=mindmapNodes.filter(n=>!toDel.includes(n.id));
+    while(added){ added=false; _mindmapNodes.forEach(n=>{ if(n.parentId && toDel.includes(n.parentId) && !toDel.includes(n.id)){ toDel.push(n.id); added=true; } }); }
+    _mindmapNodes=_mindmapNodes.filter(n=>!toDel.includes(n.id));
     mindmapSelected=null;
     renderMindmap();
   });
   safeBind('mindReset', 'click', ()=>{
     // 简单布局：根节点居中，子节点散开
-    const root=mindmapNodes.find(n=>!n.parentId);
+    const root=_mindmapNodes.find(n=>!n.parentId);
     if(root){ root.x=200; root.y=140; }
-    const children=mindmapNodes.filter(n=>n.parentId);
+    const children=_mindmapNodes.filter(n=>n.parentId);
     if(children.length){
       children.forEach((n,i)=>{
         const angle=(i/children.length)*Math.PI*2;
@@ -1550,7 +1550,7 @@ function bindHarvestEvents(){
       id:uid(),
       rawContent:raw,
       aiInsights:null,
-      mindmap:JSON.parse(JSON.stringify(mindmapNodes)),
+      mindmap:JSON.parse(JSON.stringify(_mindmapNodes)),
       userSummary:summary,
       categoryGoalId:goalId,
       categorySubIdx:subIdx?parseInt(subIdx):null,
@@ -1560,7 +1560,7 @@ function bindHarvestEvents(){
     Store.set(DB);
     $('#harvestInput').value='';
     $('#harvestSummary').value='';
-    mindmapNodes=[{id:uid(),text:'中心主题',x:200,y:140,parentId:null}];
+    _mindmapNodes=[{id:uid(),text:'中心主题',x:200,y:140,parentId:null}];
     renderHarvest();
     toast('已保存到类别文件夹');
   });

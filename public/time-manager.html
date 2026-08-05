@@ -1630,7 +1630,8 @@ function bindArchiveEvents(){
    ============================================================ */
 function renderStats(){
   const [mon,sun]=weekRange(currentDate);
-  $('#weekRange').textContent=`${mon} ~ ${sun}`;
+  const weekRangeEl=$('#weekRange');
+  if(weekRangeEl) weekRangeEl.textContent=`${mon} ~ ${sun}`;
   const days=[];
   for(let i=0;i<7;i++){ const d=new Date(mon+'T00:00:00'); d.setDate(d.getDate()+i); days.push(fmt(d)); }
   const sums=days.map(d=>Engine.daySummary(d));

@@ -50,6 +50,10 @@
   html,body{margin:0;padding:0}
   body{
     background:
+      /* 柔和的渐变光斑，为玻璃拟态提供折射底色 */
+      radial-gradient(ellipse 600px 400px at 15% 10%, oklch(0.75 0.12 230 / 0.18), transparent 60%),
+      radial-gradient(ellipse 500px 500px at 85% 20%, oklch(0.7 0.14 210 / 0.14), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 50% 90%, oklch(0.68 0.1 250 / 0.12), transparent 60%),
       /* 淡淡的格子元素 */
       linear-gradient(oklch(0.6 0.08 240 / 0.035) 1px, transparent 1px) 0 0/26px 26px,
       linear-gradient(90deg, oklch(0.6 0.08 240 / 0.035) 1px, transparent 1px) 0 0/26px 26px,
@@ -58,6 +62,8 @@
     font-family: "FangSong","STFangsong","仿宋","STSong","SimSun","宋体","Songti SC",serif;
     line-height:1.7; -webkit-font-smoothing:antialiased;
     font-size:14.5px;
+    min-height:100vh;
+    background-attachment:fixed;
   }
   .wrap{max-width:1180px; margin:0 auto; padding:24px 20px 80px}
   header.top{
@@ -119,6 +125,234 @@
   @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+
+  /* ============ 玻璃拟态 (Glassmorphism) ============ */
+  .glass{
+    position:relative;
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.55), oklch(0.95 0.01 240 / 0.35));
+    border:1px solid oklch(1 0 0 / 0.5);
+    border-radius:var(--radius);
+    backdrop-filter:blur(20px) saturate(1.4);
+    -webkit-backdrop-filter:blur(20px) saturate(1.4);
+    box-shadow:
+      0 8px 32px oklch(0.55 0.08 240 / 0.12),
+      inset 0 1px 0 oklch(1 0 0 / 0.8),
+      inset 0 -1px 0 oklch(0.5 0.05 240 / 0.05);
+    overflow:hidden;
+  }
+  .glass::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:50%;
+    background:linear-gradient(180deg, oklch(1 0 0 / 0.35), transparent);
+    pointer-events:none;
+    border-radius:var(--radius) var(--radius) 0 0;
+  }
+  .glass > *{position:relative;z-index:1}
+
+  .glass-card{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.5), oklch(0.96 0.01 240 / 0.3));
+    border:1px solid oklch(1 0 0 / 0.45);
+    border-radius:var(--radius);
+    backdrop-filter:blur(18px) saturate(1.3);
+    -webkit-backdrop-filter:blur(18px) saturate(1.3);
+    box-shadow:
+      0 6px 24px oklch(0.55 0.08 240 / 0.1),
+      inset 0 1px 0 oklch(1 0 0 / 0.7);
+    overflow:hidden;
+  }
+  .glass-card::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:40%;
+    background:linear-gradient(180deg, oklch(1 0 0 / 0.3), transparent);
+    pointer-events:none;
+  }
+
+  .glass-panel{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.45), oklch(0.94 0.015 240 / 0.3));
+    border:1px solid oklch(1 0 0 / 0.5);
+    border-radius:var(--radius);
+    backdrop-filter:blur(24px) saturate(1.3);
+    -webkit-backdrop-filter:blur(24px) saturate(1.3);
+    box-shadow:
+      0 10px 40px oklch(0.55 0.08 240 / 0.12),
+      inset 0 1px 0 oklch(1 0 0 / 0.7);
+  }
+
+  /* 玻璃统计卡片 */
+  .ov-card.glass{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.5), oklch(0.94 0.02 240 / 0.3));
+    border:1px solid oklch(1 0 0 / 0.45);
+    backdrop-filter:blur(16px) saturate(1.3);
+    -webkit-backdrop-filter:blur(16px) saturate(1.3);
+  }
+
+  /* 玻璃指令按钮 */
+  .cmd.glass{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.5), oklch(0.95 0.01 240 / 0.3));
+    border:1px solid oklch(1 0 0 / 0.4);
+    backdrop-filter:blur(14px) saturate(1.2);
+    -webkit-backdrop-filter:blur(14px) saturate(1.2);
+  }
+  .cmd.glass:hover{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.65), oklch(0.9 0.02 240 / 0.4));
+    border-color:var(--primary);
+  }
+
+  /* ============ 月度专注力热力图 ============ */
+  .heatmap-wrap{
+    margin-top:20px;
+  }
+  .heatmap-header{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+  }
+  .heatmap-title{
+    font-size:14px;font-weight:700;color:var(--fg);display:flex;align-items:center;gap:8px;
+  }
+  .heatmap-nav{
+    display:flex;align-items:center;gap:6px;
+  }
+  .heatmap-nav button{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.5), oklch(0.95 0.01 240 / 0.3));
+    border:1px solid oklch(1 0 0 / 0.4);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-radius:8px;
+    padding:4px 10px;
+    font-size:12px;
+    cursor:pointer;
+    font-family:inherit;
+    color:var(--fg);
+    transition:all .15s;
+  }
+  .heatmap-nav button:hover{border-color:var(--primary)}
+  .heatmap-nav .month-label{
+    font-size:13px;font-weight:600;color:var(--fg);min-width:110px;text-align:center;
+  }
+
+  .heatmap-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+  .heatmap-weekday{
+    font-size:11px;color:var(--muted-fg);text-align:center;padding:4px 0;font-weight:600;
+  }
+  .heatmap-cell{
+    aspect-ratio:1;
+    border-radius:8px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;
+    cursor:pointer;
+    transition:transform .15s, box-shadow .15s;
+    position:relative;
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.4), oklch(0.96 0.01 240 / 0.25));
+    border:1px solid oklch(1 0 0 / 0.35);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    color:var(--muted-fg);
+  }
+  .heatmap-cell.has-data{color:oklch(0.3 0.04 240)}
+  .heatmap-cell:hover{transform:scale(1.08);box-shadow:0 4px 12px oklch(0.55 0.08 240 / 0.2);z-index:2}
+  .heatmap-cell.empty{opacity:.4;cursor:default}
+  .heatmap-cell.empty:hover{transform:none;box-shadow:none}
+  .heatmap-cell.today{
+    border:2px solid var(--primary);
+    box-shadow:0 0 0 2px oklch(0.66 0.11 240 / 0.2), inset 0 0 8px oklch(0.66 0.11 240 / 0.1);
+  }
+  .heatmap-cell .day-num{font-size:12px;line-height:1}
+  .heatmap-cell .focus-val{font-size:9px;margin-top:1px;font-weight:700}
+
+  /* 专注度颜色层级 */
+  .heatmap-cell.focus-0{background:linear-gradient(135deg, oklch(0.97 0.005 240 / 0.55), oklch(0.93 0.01 240 / 0.4));border-color:oklch(0.88 0.02 240 / 0.5)}
+  .heatmap-cell.focus-1{background:linear-gradient(135deg, oklch(0.85 0.05 240 / 0.6), oklch(0.78 0.06 240 / 0.5));color:oklch(0.25 0.04 240)}
+  .heatmap-cell.focus-2{background:linear-gradient(135deg, oklch(0.75 0.07 240 / 0.65), oklch(0.65 0.08 240 / 0.55));color:oklch(0.2 0.04 240)}
+  .heatmap-cell.focus-3{background:linear-gradient(135deg, oklch(0.68 0.09 240 / 0.7), oklch(0.58 0.1 240 / 0.6));color:oklch(0.15 0.03 240)}
+  .heatmap-cell.focus-4{background:linear-gradient(135deg, oklch(0.62 0.11 240 / 0.75), oklch(0.52 0.12 240 / 0.65));color:oklch(1 0 0)}
+  .heatmap-cell.focus-5{background:linear-gradient(135deg, oklch(0.58 0.13 240 / 0.8), oklch(0.48 0.14 240 / 0.7));color:oklch(1 0 0);box-shadow:0 2px 8px oklch(0.55 0.12 240 / 0.25)}
+
+  .heatmap-legend{
+    display:flex;align-items:center;gap:12px;margin-top:14px;font-size:11px;color:var(--muted-fg);
+  }
+  .heatmap-legend .legend-level{
+    display:flex;align-items:center;gap:4px;
+  }
+  .heatmap-legend .legend-swatch{
+    width:16px;height:16px;border-radius:4px;border:1px solid oklch(1 0 0 / 0.4);
+  }
+
+  .heatmap-tooltip{
+    position:fixed;
+    background:linear-gradient(135deg, oklch(0.25 0.04 240 / 0.95), oklch(0.2 0.03 240 / 0.9));
+    color:oklch(0.98 0.005 240);
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:12px;
+    pointer-events:none;
+    z-index:100;
+    box-shadow:0 8px 24px oklch(0 0 0 / 0.3);
+    white-space:nowrap;
+    border:1px solid oklch(1 0 0 / 0.15);
+    transform:translate(-50%, -120%);
+    transition:opacity .15s;
+  }
+  .heatmap-tooltip::after{
+    content:"";position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+    border:5px solid transparent;border-top-color:oklch(0.2 0.03 240 / 0.9);
+  }
+
+  /* 统计概览增强 */
+  .stat-summary-row{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;
+  }
+  @media(max-width:720px){.stat-summary-row{grid-template-columns:repeat(2,1fr)}}
+
+  .stat-summary-card{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.55), oklch(0.94 0.02 240 / 0.35));
+    border:1px solid oklch(1 0 0 / 0.45);
+    border-radius:var(--radius);
+    padding:16px;
+    backdrop-filter:blur(20px) saturate(1.3);
+    -webkit-backdrop-filter:blur(20px) saturate(1.3);
+    box-shadow:
+      0 8px 32px oklch(0.55 0.08 240 / 0.1),
+      inset 0 1px 0 oklch(1 0 0 / 0.7);
+    position:relative;overflow:hidden;
+  }
+  .stat-summary-card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:50%;
+    background:linear-gradient(180deg, oklch(1 0 0 / 0.3), transparent);
+    pointer-events:none;
+  }
+  .stat-summary-card .k{font-size:12px;color:var(--muted-fg);display:flex;align-items:center;gap:6px;font-weight:600}
+  .stat-summary-card .v{font-size:26px;font-weight:700;margin-top:6px;letter-spacing:.3px;background:linear-gradient(135deg, var(--primary), oklch(0.72 0.09 220));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat-summary-card .hint{font-size:11.5px;color:var(--muted-fg);margin-top:4px}
+
+  /* 玻璃容器里的柱状图/饼图增强 */
+  .glass .week-chart{border-bottom-color:oklch(1 0 0 / 0.3)}
+  .glass .bar-track{background:oklch(1 0 0 / 0.4)}
+  .glass .donut .hole{background:oklch(1 0 0 / 0.6);backdrop-filter:blur(8px)}
+
+  /* Tab 玻璃化 */
+  nav.tabs.glass-tabs{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.4), oklch(0.95 0.01 240 / 0.25));
+    border:1px solid oklch(1 0 0 / 0.4);
+    border-radius:14px;
+    padding:6px;
+    backdrop-filter:blur(18px) saturate(1.3);
+    -webkit-backdrop-filter:blur(18px) saturate(1.3);
+    box-shadow:0 6px 20px oklch(0.55 0.08 240 / 0.08);
+  }
+  nav.tabs.glass-tabs button{
+    border-radius:10px;
+    padding:8px 14px;
+    transition:all .2s;
+  }
+  nav.tabs.glass-tabs button.active{
+    background:linear-gradient(135deg, oklch(0.66 0.11 240), oklch(0.72 0.09 220));
+    color:var(--primary-fg);
+    border-bottom-color:transparent;
+    box-shadow:0 4px 12px oklch(0.55 0.1 240 / 0.3);
+  }
   .card h2{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
   .card .desc{color:var(--muted-fg);font-size:12.5px;margin:0 0 14px}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -369,7 +603,7 @@
   <!-- 概览 -->
   <section class="overview" id="overview"></section>
 
-  <nav class="tabs" id="tabs">
+  <nav class="tabs glass-tabs" id="tabs">
     <button data-tab="record" class="active">① 当日记录 / 复盘</button>
     <button data-tab="goals">② 大目标管理</button>
     <button data-tab="archive">③ 归档追溯</button>
@@ -422,11 +656,11 @@
       <h2>指令</h2>
       <p class="desc">选择一条指令，系统基于当日与近期记录生成对应分析。所有结论均为客观诊断，不掺空洞鼓励。</p>
       <div class="cmd-grid">
-        <button class="cmd" data-cmd="review"><div class="t">今日复盘</div><div class="d">三层输出：简报·偏差·方案</div></button>
-        <button class="cmd" data-cmd="tomorrow"><div class="t">明日规划</div><div class="d">基于今日问题重排时间块</div></button>
-        <button class="cmd" data-cmd="deviation"><div class="t">检查目标偏离</div><div class="d">近 7 天各目标投入诊断</div></button>
-        <button class="cmd" data-cmd="adjust"><div class="t">调整长期目标</div><div class="d">跳转大目标管理并给建议</div></button>
-        <button class="cmd" data-cmd="week"><div class="t">统计本周时间占比</div><div class="d">跳转本周统计图表</div></button>
+        <button class="cmd glass" data-cmd="review"><div class="t">今日复盘</div><div class="d">三层输出：简报·偏差·方案</div></button>
+        <button class="cmd glass" data-cmd="tomorrow"><div class="t">明日规划</div><div class="d">基于今日问题重排时间块</div></button>
+        <button class="cmd glass" data-cmd="deviation"><div class="t">检查目标偏离</div><div class="d">近 7 天各目标投入诊断</div></button>
+        <button class="cmd glass" data-cmd="adjust"><div class="t">调整长期目标</div><div class="d">跳转大目标管理并给建议</div></button>
+        <button class="cmd glass" data-cmd="week"><div class="t">统计本周时间占比</div><div class="d">跳转本周统计图表</div></button>
       </div>
     </div>
 
@@ -492,7 +726,32 @@
 
   <!-- ============ 统计 ============ -->
   <section class="panel" id="panel-stats">
-    <div class="card">
+    <!-- 数据概览卡片 -->
+    <div class="stat-summary-row">
+      <div class="stat-summary-card" id="ssTotal">
+        <div class="k">⏱ 本周总时长</div>
+        <div class="v" id="ssTotalVal">0h</div>
+        <div class="hint" id="ssTotalHint">7天累计投入</div>
+      </div>
+      <div class="stat-summary-card" id="ssFocus">
+        <div class="k">⚡ 平均专注度</div>
+        <div class="v" id="ssFocusVal">—</div>
+        <div class="hint" id="ssFocusHint">本周所有记录均值</div>
+      </div>
+      <div class="stat-summary-card" id="ssDays">
+        <div class="k">📅 打卡天数</div>
+        <div class="v" id="ssDaysVal">0</div>
+        <div class="hint" id="ssDaysHint">本周有记录的天数</div>
+      </div>
+      <div class="stat-summary-card" id="ssGoal">
+        <div class="k">🎯 目标达成率</div>
+        <div class="v" id="ssGoalVal">0%</div>
+        <div class="hint" id="ssGoalHint">投入大目标时间占比</div>
+      </div>
+    </div>
+
+    <!-- 本周时间占比 玻璃卡片 -->
+    <div class="card glass">
       <div class="row">
         <h2 class="grow" style="margin:0">本周时间占比</h2>
         <span class="muted" id="weekRange" style="font-size:12px"></span>
@@ -512,6 +771,30 @@
       </div>
       <div class="sect-title" style="margin-top:18px">各大目标本周投入时长</div>
       <div class="stat-bars" id="goalBars"></div>
+    </div>
+
+    <!-- 月度专注力热力图 玻璃卡片 -->
+    <div class="card glass">
+      <div class="heatmap-header">
+        <div class="heatmap-title">🔥 月度专注力热力图</div>
+        <div class="heatmap-nav">
+          <button id="hmPrev">◀</button>
+          <span class="month-label" id="hmMonthLabel">2026年8月</span>
+          <button id="hmNext">▶</button>
+          <button id="hmToday">今天</button>
+        </div>
+      </div>
+      <p class="desc">每日专注度（1-10分）以颜色深浅呈现，越深代表专注度越高。悬停查看详细数据。</p>
+      <div class="heatmap-grid" id="heatmapGrid"></div>
+      <div class="heatmap-legend">
+        <span>专注度:</span>
+        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.97 0.005 240/.55),oklch(0.93 0.01 240/.4))"></div>0</div>
+        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.85 0.05 240/.6),oklch(0.78 0.06 240/.5))"></div>1-2</div>
+        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.75 0.07 240/.65),oklch(0.65 0.08 240/.55))"></div>3-4</div>
+        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.68 0.09 240/.7),oklch(0.58 0.1 240/.6))"></div>5-6</div>
+        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.62 0.11 240/.75),oklch(0.52 0.12 240/.65))"></div>7-8</div>
+        <div class="legend-level"><div class="legend-swatch" style="background:linear-gradient(135deg,oklch(0.58 0.13 240/.8),oklch(0.48 0.14 240/.7))"></div>9-10</div>
+      </div>
     </div>
   </section>
 
@@ -785,10 +1068,10 @@ function renderOverview(){
   const avgFocus = rec.length? (rec.reduce((s,r)=>s+(+r.focus||0),0)/rec.length).toFixed(1) : '—';
 
   $('#overview').innerHTML = `
-    <div class="ov-card"><div class="k">📅 当日记录</div><div class="v">${rec.length}<span style="font-size:13px;color:var(--muted-fg)"> / ${MAX_REC}</span></div><div class="hint">总时长 ${fmtDur(total)}</div></div>
-    <div class="ov-card"><div class="k">🎯 投向大目标</div><div class="v">${goalPct}%</div><div class="hint">${fmtDur(goalTime)} 有明确目标归属</div></div>
-    <div class="ov-card"><div class="k">🎮 娱乐占比</div><div class="v" style="color:${funPct>25?'var(--danger)':funPct>15?'var(--warn)':'var(--ok)'}">${funPct}%</div><div class="hint">${funPct>25?'超出建议区间':'建议 ≤25%'}</div></div>
-    <div class="ov-card"><div class="k">⚡ 平均专注度</div><div class="v">${avgFocus}</div><div class="hint">学习/工作专注: ${fmtDur(study)}</div></div>
+    <div class="ov-card glass"><div class="k">📅 当日记录</div><div class="v">${rec.length}<span style="font-size:13px;color:var(--muted-fg)"> / ${MAX_REC}</span></div><div class="hint">总时长 ${fmtDur(total)}</div></div>
+    <div class="ov-card glass"><div class="k">🎯 投向大目标</div><div class="v">${goalPct}%</div><div class="hint">${fmtDur(goalTime)} 有明确目标归属</div></div>
+    <div class="ov-card glass"><div class="k">🎮 娱乐占比</div><div class="v" style="color:${funPct>25?'var(--danger)':funPct>15?'var(--warn)':'var(--ok)'}">${funPct}%</div><div class="hint">${funPct>25?'超出建议区间':'建议 ≤25%'}</div></div>
+    <div class="ov-card glass"><div class="k">⚡ 平均专注度</div><div class="v">${avgFocus}</div><div class="hint">学习/工作专注: ${fmtDur(study)}</div></div>
   `;
 }
 
@@ -1445,6 +1728,155 @@ function renderStats(){
   const gVals=DB.goals.map(g=>({g, v:sums.reduce((a,s)=>a+(s.byGoal[g.id]||0),0)}));
   const gMax=Math.max(1,...gVals.map(x=>x.v));
   goalBars.innerHTML=gVals.map(x=>`<div class="bar-row"><span>${esc(x.g.title)}<span class="prio ${PRIO[x.g.priority].cls}" style="margin-left:5px;font-size:9px;padding:0 5px">${PRIO[x.g.priority].label}</span></span><div class="bar-track"><div class="bar-fill" style="width:${x.v/gMax*100}%;background:${x.g.priority==='high'?'var(--primary)':'var(--c-rest)'}"></div></div><span class="bar-val">${fmtDur(x.v)}</span></div>`).join('');
+  
+  // 统计概览卡片
+  const totalHours=grand/60;
+  const avgFocusAll=sums.filter(s=>s.avgFocus>0).map(s=>s.avgFocus);
+  const avgFocus=avgFocusAll.length?(avgFocusAll.reduce((a,b)=>a+b,0)/avgFocusAll.length).toFixed(1):'—';
+  const activeDays=sums.filter(s=>s.total>0).length;
+  const goalTotal=sums.reduce((a,s)=>a+s.goalTotal,0);
+  const goalPct=grand>0?Math.round(goalTotal/grand*100):0;
+  
+  $('#ssTotalVal').textContent=totalHours.toFixed(1)+'h';
+  $('#ssTotalHint').textContent=`7天累计投入 · ${activeDays}天有记录`;
+  $('#ssFocusVal').textContent=avgFocus;
+  $('#ssFocusHint').textContent=avgFocus==='—'?'暂未记录专注度':'本周 '+avgFocusAll.length+'天有专注度数据';
+  $('#ssDaysVal').textContent=activeDays;
+  $('#ssDaysHint').textContent=activeDays===0?'本周还没有打卡':'连续打卡中';
+  $('#ssGoalVal').textContent=goalPct+'%';
+  $('#ssGoalHint').textContent=grand>0?`${fmtDur(goalTotal)} / ${fmtDur(grand)}`:'投入大目标的时间占比';
+  
+  // 渲染热力图
+  renderHeatmap();
+}
+
+/* ============================================================
+   月度专注力热力图
+   ============================================================ */
+let _heatmapYear=null;
+let _heatmapMonth=null;
+
+function renderHeatmap(){
+  if(_heatmapYear===null){
+    const now=new Date();
+    _heatmapYear=now.getFullYear();
+    _heatmapMonth=now.getMonth();
+  }
+  
+  const label=$('#hmMonthLabel');
+  if(label) label.textContent=`${_heatmapYear}年${_heatmapMonth+1}月`;
+  
+  const firstDay=new Date(_heatmapYear, _heatmapMonth, 1);
+  const lastDay=new Date(_heatmapYear, _heatmapMonth+1, 0);
+  const startWeekday=firstDay.getDay();
+  const daysInMonth=lastDay.getDate();
+  const today=new Date();
+  const todayStr=fmt(today);
+  const offset=(startWeekday+6)%7;
+  
+  const weekdays=['一','二','三','四','五','六','日'];
+  let html=weekdays.map(w=>`<div class="heatmap-weekday">${w}</div>`).join('');
+  
+  for(let i=0;i<offset;i++){
+    html+=`<div class="heatmap-cell empty"></div>`;
+  }
+  
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr=`${_heatmapYear}-${String(_heatmapMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const summary=Engine.daySummary(dateStr);
+    const hasData=summary.total>0;
+    const isToday=dateStr===todayStr;
+    const focusLevel=hasData? Math.min(5, Math.ceil(summary.avgFocus/2)) : 0;
+    const focusVal=hasData? summary.avgFocus.toFixed(1) : '';
+    
+    const classes=['heatmap-cell'];
+    if(hasData) classes.push('has-data', 'focus-'+focusLevel);
+    else classes.push('empty');
+    if(isToday) classes.push('today');
+    
+    const titleParts=[`${dateStr}`];
+    if(hasData){
+      titleParts.push(`专注度: ${summary.avgFocus.toFixed(1)}`);
+      titleParts.push(`时长: ${fmtDur(summary.total)}`);
+      titleParts.push(`记录: ${summary.rec.length}条`);
+    } else {
+      titleParts.push('暂无记录');
+    }
+    
+    html+=`<div class="${classes.join(' ')}" data-date="${dateStr}" title="${titleParts.join(' | ')}">
+      <span class="day-num">${d}</span>
+      ${hasData?`<span class="focus-val">${focusVal}</span>`:''}
+    </div>`;
+  }
+  
+  const grid=$('#heatmapGrid');
+  if(grid) grid.innerHTML=html;
+}
+
+function initHeatmapEvents(){
+  const prev=$('#hmPrev');
+  if(prev) prev.addEventListener('click', ()=>{
+    _heatmapMonth--;
+    if(_heatmapMonth<0){ _heatmapMonth=11; _heatmapYear--; }
+    renderHeatmap();
+  });
+  const next=$('#hmNext');
+  if(next) next.addEventListener('click', ()=>{
+    _heatmapMonth++;
+    if(_heatmapMonth>11){ _heatmapMonth=0; _heatmapYear++; }
+    renderHeatmap();
+  });
+  const today=$('#hmToday');
+  if(today) today.addEventListener('click', ()=>{
+    const now=new Date();
+    _heatmapYear=now.getFullYear();
+    _heatmapMonth=now.getMonth();
+    renderHeatmap();
+  });
+  
+  const grid=$('#heatmapGrid');
+  if(grid){
+    grid.addEventListener('mousemove', e=>{
+      const cell=e.target.closest('.heatmap-cell');
+      if(!cell || cell.classList.contains('empty')){
+        hideHeatmapTooltip();
+        return;
+      }
+      const dateStr=cell.dataset.date;
+      const summary=Engine.daySummary(dateStr);
+      const hasData=summary.total>0;
+      
+      let tooltip=document.getElementById('heatmapTooltip');
+      if(!tooltip){
+        tooltip=document.createElement('div');
+        tooltip.id='heatmapTooltip';
+        tooltip.className='heatmap-tooltip';
+        document.body.appendChild(tooltip);
+      }
+      
+      if(hasData){
+        tooltip.innerHTML=`
+          <div style="font-weight:700">${dateStr}</div>
+          <div>专注度: <b>${summary.avgFocus.toFixed(1)}</b> / 10</div>
+          <div>时长: ${fmtDur(summary.total)}</div>
+          <div>记录: ${summary.rec.length} 条</div>
+        `;
+      } else {
+        tooltip.innerHTML=`<div style="font-weight:700">${dateStr}</div><div>暂无记录</div>`;
+      }
+      
+      tooltip.style.left=e.clientX+'px';
+      tooltip.style.top=e.clientY+'px';
+      tooltip.style.opacity='1';
+    });
+    
+    grid.addEventListener('mouseleave', hideHeatmapTooltip);
+  }
+}
+
+function hideHeatmapTooltip(){
+  const tooltip=document.getElementById('heatmapTooltip');
+  if(tooltip) tooltip.style.opacity='0';
 }
 
 /* ============================================================
@@ -2131,6 +2563,7 @@ $('#dateSel').value=currentDate;
 $('#archFrom').value=daysAgoStr(13);
 $('#archTo').value=todayStr();
 bindRecordEvents(); bindGoalEvents(); bindResourceEvents(); bindArchiveEvents(); bindInsightEvents();
+initHeatmapEvents();
 // harvest 事件在切换到对应 tab 时懒绑定，确保 DOM 已就绪
 refreshAll();
 </script>

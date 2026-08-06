@@ -511,6 +511,68 @@
   .save-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
   .category-select{display:flex;gap:6px;align-items:center;flex:1;min-width:200px}
   .category-select select{flex:1;min-width:0}
+
+  /* ============ 语音输入 ============ */
+  .voice-btn.recording{
+    background:oklch(0.62 0.18 25 / 0.12);
+    border-color:var(--danger);
+    color:var(--danger);
+    animation:voicePulse 1.2s ease-in-out infinite;
+  }
+  .voice-btn.recording .voice-icon{animation:voiceBounce .6s ease-in-out infinite}
+  @keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 oklch(0.62 0.18 25 / 0.3)}50%{box-shadow:0 0 0 6px oklch(0.62 0.18 25 / 0)}}
+  @keyframes voiceBounce{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+
+  /* ============ 照片墙 ============ */
+  #panel-photos{padding:0}
+  .photo-wall-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 10px;flex-wrap:wrap;gap:8px;
+  }
+  .photo-wall-head h2{margin:0;font-size:16px;display:flex;align-items:center;gap:6px}
+  .photo-wall-nav{display:flex;align-items:center;gap:6px}
+  .photo-wall-nav button{
+    background:linear-gradient(135deg, oklch(1 0 0 / 0.5), oklch(0.95 0.01 240 / 0.3));
+    border:1px solid oklch(1 0 0 / 0.4);
+    backdrop-filter:blur(10px);
+    border-radius:8px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--fg);
+  }
+  .photo-wall-nav button:hover{border-color:var(--primary)}
+  .photo-wall-nav .pm-label{font-size:14px;font-weight:700;min-width:100px;text-align:center}
+  .photo-wall-info{font-size:12px;color:var(--muted-fg);padding:0 18px 8px}
+  .photo-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+    gap:6px;padding:6px 18px 18px;
+    align-content:start;
+  }
+  .photo-cell{
+    position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;cursor:pointer;
+    background:var(--muted);box-shadow:0 2px 8px oklch(0.55 0.08 240 / 0.1);
+    transition:transform .2s, box-shadow .2s;
+  }
+  .photo-cell:hover{transform:scale(1.04);box-shadow:0 6px 20px oklch(0.55 0.08 240 / 0.2);z-index:2}
+  .photo-cell img{width:100%;height:100%;object-fit:cover;display:block}
+  .photo-cell .photo-date{
+    position:absolute;bottom:0;left:0;right:0;
+    background:linear-gradient(transparent, oklch(0 0 0 / 0.65));
+    color:#fff;font-size:10px;padding:8px 6px 4px;text-align:center;
+    opacity:0;transition:opacity .2s;
+  }
+  .photo-cell:hover .photo-date{opacity:1}
+  .photo-empty{
+    grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted-fg);
+  }
+  .photo-empty .icon{font-size:48px;margin-bottom:8px}
+  /* 灯箱 */
+  .lightbox{
+    position:fixed;inset:0;background:oklch(0 0 0 / 0.92);z-index:9999;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    cursor:zoom-out;
+  }
+  .lightbox img{max-width:92vw;max-height:85vh;border-radius:8px;box-shadow:0 8px 40px oklch(0 0 0 / 0.5)}
+  .lightbox .lb-info{color:#fff;font-size:13px;margin-top:12px;text-align:center}
+  .lightbox .lb-close{position:absolute;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;line-height:1}
 </style>
 </head>
 <body>
@@ -545,6 +607,7 @@
     <button data-tab="archive">③ 归档追溯</button>
     <button data-tab="stats">④ 本周统计</button>
     <button data-tab="harvest">⑤ 每日收获</button>
+    <button data-tab="photos">⑥ 本月照片墙</button>
   </nav>
 
   <!-- ============ 当日记录 ============ -->
@@ -765,9 +828,15 @@
 
         <!-- 文档编辑区 -->
         <div class="user-summary">
-          <h3>📝 编辑内容</h3>
-          <p class="desc" style="color:var(--muted-fg);font-size:12.5px;margin:0 0 6px">写下你的思考、总结和行动项。</p>
-          <textarea id="harvestSummary" placeholder="用自己的话总结今天的收获……（支持多行、换行）"></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <h3 style="margin:0">📝 编辑内容</h3>
+            <button class="btn sm ghost voice-btn" id="voiceBtn" title="语音输入（点击开始/再次点击结束）" style="display:inline-flex;align-items:center;gap:4px;font-size:12px">
+              <span class="voice-icon">🎤</span>
+              <span class="voice-text">语音输入</span>
+            </button>
+          </div>
+          <p class="desc" style="color:var(--muted-fg);font-size:12.5px;margin:0 0 6px">写下你的思考、总结和行动项。可多次提交，每次记录日期并归入不同文件夹。</p>
+          <textarea id="harvestSummary" placeholder="用自己的话总结今天的收获……（支持多行、换行；也可点击右上角「语音输入」口述）"></textarea>
           <div class="save-row">
             <div class="category-select">
               <select id="harvestGoal">
@@ -791,6 +860,21 @@
         </div>
       </main>
     </div>
+  </section>
+
+  <!-- ============ 本月照片墙 ============ -->
+  <section class="panel" id="panel-photos">
+    <div class="photo-wall-head">
+      <h2>📸 触动瞬间 · 照片墙</h2>
+      <div class="photo-wall-nav">
+        <button id="pmPrev">◀ 上月</button>
+        <span class="pm-label" id="pmLabel">2026年8月</span>
+        <button id="pmNext">下月 ▶</button>
+        <button id="pmToday">本月</button>
+      </div>
+    </div>
+    <div class="photo-wall-info" id="pmInfo">加载中…</div>
+    <div class="photo-grid" id="photoGrid"></div>
   </section>
 
   <!-- 文档阅览模态弹窗 -->
@@ -2342,6 +2426,171 @@ function exportByCategory(){
 }
 
 /* ============================================================
+   语音转文字（Web Speech API）
+   ============================================================ */
+let _recognition=null;
+let _voiceRecording=false;
+function initVoiceInput(){
+  const btn=$('#voiceBtn');
+  if(!btn) return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    btn.style.opacity='0.5';
+    btn.title='当前浏览器不支持语音识别，建议使用 Chrome/Edge';
+    btn.addEventListener('click',()=>toast('当前浏览器不支持语音识别，建议使用 Chrome/Edge'));
+    return;
+  }
+  btn.addEventListener('click', ()=>{
+    if(_voiceRecording){
+      _recognition.stop();
+      return;
+    }
+    if(!_recognition){
+      _recognition=new SR();
+      _recognition.lang='zh-CN';
+      _recognition.continuous=true;
+      _recognition.interimResults=true;
+      _recognition.onresult=e=>{
+        const ta=$('#harvestSummary');
+        let interim='', final='';
+        for(let i=e.resultIndex;i<e.results.length;i++){
+          const t=e.results[i][0].transcript;
+          if(e.results[i].isFinal) final+=t; else interim+=t;
+        }
+        if(final){
+          // 在光标处插入最终结果
+          const pos=ta.selectionStart||ta.value.length;
+          ta.value=ta.value.slice(0,pos)+final+ta.value.slice(pos);
+          ta.selectionStart=ta.selectionEnd=pos+final.length;
+        }
+      };
+      _recognition.onend=()=>{
+        _voiceRecording=false;
+        btn.classList.remove('recording');
+        btn.querySelector('.voice-text').textContent='语音输入';
+      };
+      _recognition.onerror=e=>{
+        _voiceRecording=false;
+        btn.classList.remove('recording');
+        btn.querySelector('.voice-text').textContent='语音输入';
+        if(e.error==='not-allowed') toast('请允许麦克风权限');
+        else if(e.error!=='aborted') toast('语音识别出错: '+e.error);
+      };
+    }
+    try{
+      _recognition.start();
+      _voiceRecording=true;
+      btn.classList.add('recording');
+      btn.querySelector('.voice-text').textContent='停止录音';
+      toast('开始语音输入，口述后点击「停止录音」');
+    }catch(err){
+      toast('启动失败，请重试');
+    }
+  });
+}
+
+/* ============================================================
+   照片墙
+   ============================================================ */
+let _photoMonth=null; // 'YYYY-MM'
+
+function renderPhotos(){
+  const grid=$('#photoGrid');
+  const label=$('#pmLabel');
+  const info=$('#pmInfo');
+  if(!grid) return;
+  if(!_photoMonth) _photoMonth=todayStr().slice(0,7);
+  const [y,m]=_photoMonth.split('-').map(Number);
+  label.textContent=`${y}年${m}月`;
+  // 收集该月所有图片，按日期+顺序排列
+  const photos=[];
+  Object.entries(DB.harvest).forEach(([date,arr])=>{
+    if(!date.startsWith(_photoMonth)) return;
+    arr.forEach(doc=>{
+      (doc.images||[]).forEach((src,idx)=>{
+        photos.push({src,date,idx,docId:doc.id,goalId:doc.categoryGoalId});
+      });
+    });
+  });
+  photos.sort((a,b)=> a.date.localeCompare(b.date) || a.idx-b.idx);
+  // 信息
+  if(!photos.length){
+    info.textContent=`${y}年${m}月暂无照片，去「⑤ 每日收获」上传图片吧`;
+    grid.innerHTML='<div class="photo-empty"><div class="icon">📷</div>本月还没有照片记录<br><span style="font-size:12px">在「每日收获」中上传图片后会自动出现在这里</span></div>';
+    return;
+  }
+  const days=new Set(photos.map(p=>p.date)).size;
+  info.textContent=`共 ${photos.length} 张照片 · ${days} 天有记录`;
+  // 自适应网格：根据数量调整最小列宽
+  const minW = photos.length>30?120 : photos.length>12?150 : 170;
+  grid.style.gridTemplateColumns=`repeat(auto-fill, minmax(min(100%, ${minW}px), 1fr))`;
+  grid.innerHTML=photos.map((p,i)=>{
+    const g=DB.goals.find(x=>x.id===p.goalId);
+    return `
+    <div class="photo-cell" data-idx="${i}">
+      <img src="${p.src}" alt="${p.date}" loading="lazy">
+      <div class="photo-date">${p.date.slice(5)}${g?' · '+esc(g.title):''}</div>
+    </div>`;
+  }).join('');
+}
+
+function initPhotoWallEvents(){
+  if(window._photoBound) return;
+  window._photoBound=true;
+  const panel=$('#panel-photos');
+  if(!panel) return;
+  panel.addEventListener('click',e=>{
+    const t=e.target;
+    if(t.id==='pmPrev'){ _photoMonth=shiftMonth(_photoMonth,-1); renderPhotos(); }
+    if(t.id==='pmNext'){ _photoMonth=shiftMonth(_photoMonth,1); renderPhotos(); }
+    if(t.id==='pmToday'){ _photoMonth=todayStr().slice(0,7); renderPhotos(); }
+    const cell=t.closest('.photo-cell');
+    if(cell){
+      const idx=+cell.dataset.idx;
+      const allImg=Array.from(panel.querySelectorAll('.photo-cell img'));
+      openLightbox(allImg.map(img=>({src:img.src,date:img.alt})), idx);
+    }
+  });
+}
+
+function shiftMonth(ym, delta){
+  let [y,m]=ym.split('-').map(Number);
+  m+=delta;
+  if(m<1){ m=12; y--; }
+  if(m>12){ m=1; y++; }
+  return `${y}-${String(m).padStart(2,'0')}`;
+}
+
+function openLightbox(photos, idx){
+  let cur=idx;
+  const lb=document.createElement('div');
+  lb.className='lightbox';
+  lb.innerHTML=`
+    <span class="lb-close">×</span>
+    <img src="${photos[cur].src}">
+    <div class="lb-info">${photos[cur].date} · ${cur+1}/${photos.length}　<span style="opacity:.7">← → 切换　ESC 关闭</span></div>
+  `;
+  document.body.appendChild(lb);
+  document.body.style.overflow='hidden';
+  const img=lb.querySelector('img');
+  const info=lb.querySelector('.lb-info');
+  function show(i){
+    cur=(i+photos.length)%photos.length;
+    img.src=photos[cur].src;
+    info.textContent=`${photos[cur].date} · ${cur+1}/${photos.length}　← → 切换　ESC 关闭`;
+  }
+  lb.addEventListener('click',e=>{
+    if(e.target===lb || e.target.classList.contains('lb-close')){ lb.remove(); document.body.style.overflow=''; }
+  });
+  document.addEventListener('keydown',function kl(e){
+    if(!document.body.contains(lb)){ document.removeEventListener('keydown',kl); return; }
+    if(e.key==='Escape'){ lb.remove(); document.body.style.overflow=''; }
+    if(e.key==='ArrowLeft') show(cur-1);
+    if(e.key==='ArrowRight') show(cur+1);
+  });
+}
+
+/* ============================================================
    每日收获 —— 事件绑定
    ============================================================ */
 function bindHarvestEvents(){
@@ -2351,6 +2600,8 @@ function bindHarvestEvents(){
   const panel=$('#panel-harvest');
   if(!panel) return;
   
+  // 初始化语音输入
+  initVoiceInput();
   // 点击事件
   panel.addEventListener('click', e=>{
     const t=e.target;
@@ -2400,7 +2651,16 @@ function bindHarvestEvents(){
       $('#harvestInput').value='';
       $('#harvestSummary').value='';
       _harvestImages=[];
+      // 保留文件夹选择，方便连续多次提交到同一文件夹
+      const keepGoal=$('#harvestGoal').value;
+      const keepSub=$('#harvestSub').value;
       renderHarvest();
+      $('#harvestGoal').value=keepGoal;
+      $('#harvestGoal').dispatchEvent(new Event('change'));
+      if(keepSub){ setTimeout(()=>{ $('#harvestSub').value=keepSub; }, 30); }
+      // 提示今日已提交条数
+      const todayCount=(DB.harvest[currentDate]||[]).length;
+      toast(`已保存（今日第 ${todayCount} 条），可继续提交下一条`);
     }
     
     // 文件夹点击
@@ -2520,6 +2780,10 @@ function switchTab(name){
     window._harvestBound=true;
     renderHarvest();
   }
+  if(name==='photos'){
+    initPhotoWallEvents();
+    renderPhotos();
+  }
 }
 $('#tabs').addEventListener('click', e=>{ if(e.target.dataset.tab) switchTab(e.target.dataset.tab); });
 window.switchTab=switchTab;
@@ -2539,7 +2803,7 @@ $('#todayBtn').addEventListener('click', ()=>{ currentDate=todayStr(); $('#dateS
    刷新
    ============================================================ */
 function refreshAll(){
-  renderOverview(); renderRecords(); renderInsight(); renderGoals(); renderArchive(); renderStats(); renderHarvest();
+  renderOverview(); renderRecords(); renderInsight(); renderGoals(); renderArchive(); renderStats(); renderHarvest(); renderPhotos();
 }
 
 /* ---------- 启动 ---------- */
@@ -2548,6 +2812,7 @@ $('#archFrom').value=daysAgoStr(13);
 $('#archTo').value=todayStr();
 bindRecordEvents(); bindGoalEvents(); bindResourceEvents(); bindArchiveEvents(); bindInsightEvents();
 initHeatmapEvents();
+initPhotoWallEvents();
 // harvest 事件在切换到对应 tab 时懒绑定，确保 DOM 已就绪
 refreshAll();
 </script>

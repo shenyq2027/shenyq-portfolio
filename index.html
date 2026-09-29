@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>申雨茜 | 运营策略作品集</title>
+  <meta name="description" content="申雨茜 · 出海增长 × AI · 运营策略作品集" />
+
+  <!-- ===== 免费无版权字体：衬线手写(标题) + 无衬线细体(正文) ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- ===== Tailwind CSS v3 (CDN) ===== -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    /* Tailwind 配置：严格注入 PRD 指定色值与字体，禁止自定义颜色 */
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas:    '#F6F3EF', // 画布基底 米白
+            ink:       '#7A8FA6', // 主油墨蓝
+            clay:      '#C9B8B2', // 柔粉棕
+            data:      '#966B67', // 数据高亮
+            // 页面辅色
+            apricot:   '#E6D5C9', // 页面一 暖杏
+            mint:      '#B8D0C9', // 页面二 薄荷绿
+            seasalt:   '#B4C8D9', // 页面三 海盐蓝
+            charcoal:  '#94999E', // 页面四 浅炭灰
+            // 文字色
+            title:     '#3A3F44', // 一级标题
+            body:      '#595F66', // 正文
+            note:      '#777C82', // 备注小字
+          },
+          fontFamily: {
+            hand:  ['"Ma Shan Zheng"', '"Noto Serif SC"', 'serif'], // 手写油画标题
+            serif: ['"Noto Serif SC"', 'serif'],                     // 衬线副标题
+            sans:  ['"Noto Sans SC"', 'sans-serif'],                 // 细体正文
+          },
+          transitionTimingFunction: {
+            soft: 'cubic-bezier(0.22, 0.61, 0.36, 1)', // 舒缓缓动，无回弹
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* =========================================================
+       全局基础
+    ========================================================= */
+    :root {
+      --texture-strength: 45;  /* 油画肌理强度 0-100，由滑块控制 */
+      --softlight: 0;          /* 柔光弱化开关 0/1 */
+    }
+    * { -webkit-font-smoothing: antialiased; }
+    html, body { height: 100%; }
+    body {
+      background-color: #F6F3EF;
+      color: #595F66;
+      font-family: '"Noto Sans SC"', sans-serif;
+      overflow: hidden; /* 主区域内部滚动 */
+    }
+
+    /* =========================================================
+       油画画布颗粒肌理（CSS 渐变 + 滤镜模拟，强度可调）
+    ========================================================= */
+    #canvas-texture {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      /* 多层细腻噪点，用 radial-gradient 模拟颗粒 */
+      background-image:
+        radial-gradient(rgba(122,143,166,0.10) 1px, transparent 1.4px),
+        radial-gradient(rgba(150,107,103,0.08) 1px, transparent 1.4px);
+      background-size: 4px 4px, 7px 7px;
+      background-position: 0 0, 2px 3px;
+      mix-blend-mode: multiply;
+      opacity: calc(var(--texture-strength) / 100);
+      transition: opacity 500ms ease;
+    }
+    /* 柔光弱化蒙版：降低整体高光，护眼 */
+    #softlight-veil {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background: #6b5f57;
+      mix-blend-mode: multiply;
+      opacity: calc(var(--softlight) * 0.14);
+      transition: opacity 600ms ease;
+    }
+
+    /* =========================================================
+       鼠标跟随·淡水彩流体层（顶层，低速晕染）
+    ========================================================= */
+    #fluid-layer {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      overflow: hidden;
+    }
+    .fluid-blob {
+      position: absolute; width: 340px; height: 340px; border-radius: 50%;
+      background: radial-gradient(circle at 40% 40%, rgba(122,143,166,0.20), rgba(201,184,178,0.10) 55%, transparent 72%);
+      filter: blur(26px);
+      transform: translate(-50%, -50%);
+      transition: left 1200ms cubic-bezier(0.22,0.61,0.36,1), top 1200ms cubic-bezier(0.22,0.61,0.36,1);
+      mix-blend-mode: multiply;
+    }
+
+    /* =========================================================
+       手绘油墨圆角边框 + hover 油墨扩散阴影
+    ========================================================= */
+    .oil-card {
+      background: rgba(255,255,255,0.42);
+      border: 1.5px solid rgba(122,143,166,0.35);
+      border-radius: 22px 20px 24px 18px / 20px 24px 18px 22px; /* 手绘不规则圆角 */
+      box-shadow: 0 6px 22px rgba(122,143,166,0.10), inset 0 0 0 1px rgba(255,255,255,0.35);
+      transition: transform 500ms cubic-bezier(0.22,0.61,0.36,1), box-shadow 500ms ease, border-color 500ms ease;
+      backdrop-filter: blur(2px);
+    }
+    .oil-card:hover {
+      transform: translateY(-4px) scale(1.012); /* 轻微放大 */
+      box-shadow: 0 16px 40px rgba(122,143,166,0.22), 0 0 0 2px rgba(150,107,103,0.14);
+      border-color: rgba(150,107,103,0.42); /* 油墨扩散 */
+    }
+
+    /* =========================================================
+       区块滚动入场：上浮淡入 800ms 无回弹
+    ========================================================= */
+    .reveal { opacity: 0; transform: translateY(26px); }
+    .reveal.in {
+      opacity: 1; transform: translateY(0);
+      transition: opacity 800ms cubic-bezier(0.22,0.61,0.36,1), transform 800ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+
+    /* =========================================================
+       页面切换：画布平移淡入蒙版过渡
+    ========================================================= */
+    .page { display: none; }
+    .page.active {
+      display: block;
+      animation: pageIn 700ms cubic-bezier(0.22,0.61,0.36,1) both;
+    }
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateX(28px); filter: blur(3px); }
+      to   { opacity: 1; transform: translateX(0);   filter: blur(0); }
+    }
+
+    /* =========================================================
+       左侧导航·油画笔触
+    ========================================================= */
+    .nav-item {
+      position: relative; cursor: pointer;
+      transition: color 400ms ease, background 400ms ease, transform 400ms ease;
+    }
+    .nav-item .brush {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 5px; border-radius: 4px;
+      background: linear-gradient(#7A8FA6, #966B67);
+      opacity: 0; transform: scaleY(0.3); transform-origin: center;
+      transition: opacity 400ms ease, transform 400ms ease;
+    }
+    .nav-item:hover { background: rgba(201,184,178,0.20); } /* hover 油墨晕染 */
+    .nav-item.active { color: #7A8FA6; background: rgba(122,143,166,0.12); }
+    .nav-item.active .brush { opacity: 1; transform: scaleY(1); }
+
+    /* 自定义细滑块样式 */
+    input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 4px; background: rgba(122,143,166,0.30); outline: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #7A8FA6; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.15); transition: background .3s; }
+    input[type="range"]::-webkit-slider-thumb:hover { background: #966B67; }
+
+    /* 主内容区独立滚动 + 隐藏滚动条视觉 */
+    #main-scroll { scrollbar-width: thin; scrollbar-color: rgba(122,143,166,0.4) transparent; }
+    #main-scroll::-webkit-scrollbar { width: 7px; }
+    #main-scroll::-webkit-scrollbar-thumb { background: rgba(122,143,166,0.35); border-radius: 8px; }
+
+    /* =========================================================
+       页面一 · 专属样式
+    ========================================================= */
+    .p1-tab { color:#777C82; }
+    .p1-tab.active { background:#7A8FA6; color:#fff; box-shadow:0 4px 12px rgba(122,143,166,0.30); }
+    .p1-tab:not(.active):hover { background:rgba(122,143,166,0.14); color:#595F66; }
+
+    /* 卡片过滤：非选中时淡出收起 */
+    .p1-card { transition: opacity 500ms ease, transform 500ms cubic-bezier(0.22,0.61,0.36,1), filter 500ms ease; }
+    .p1-card.dimmed { opacity:0.28; filter:grayscale(0.4); transform:scale(0.97); }
+
+    /* 技能调色条 */
+    .skill-row .bar-track { height:9px; border-radius:6px; background:rgba(122,143,166,0.14); overflow:hidden; }
+    .skill-row .bar-fill { height:100%; border-radius:6px; width:0; transition:width 1100ms cubic-bezier(0.22,0.61,0.36,1); }
+
+    /* 荣誉标签 chip */
+    .skill-chip {
+      font-family:'"Noto Sans SC"',sans-serif; font-size:12px; color:#966B67;
+      padding:5px 12px; border-radius:14px 12px 15px 11px;
+      background:rgba(150,107,103,0.10); border:1px solid rgba(150,107,103,0.28);
+      transition: background 400ms ease, transform 400ms ease;
+    }
+    .skill-chip:hover { background:rgba(150,107,103,0.20); transform:translateY(-2px); }
+
+    /* 能力关键词 chip（更小号） */
+    .kw-chip {
+      font-family:'"Noto Sans SC"',sans-serif; font-size:11px; color:#595F66;
+      padding:3px 9px; border-radius:12px 10px 13px 9px;
+      background:rgba(122,143,166,0.10); border:1px solid rgba(122,143,166,0.26);
+      white-space:nowrap;
+      transition: background 400ms ease, transform 400ms ease;
+    }
+    .kw-chip:hover { background:rgba(122,143,166,0.20); transform:translateY(-2px); }
+
+    /* 概览数字条 */
+    .stat-cell { text-align:center; padding:2px 8px; }
+    .stat-cell .stat-num { font-family:'Ma Shan Zheng','Noto Serif SC',serif; font-size:30px; line-height:1.1; color:#7A8FA6; }
+    .stat-cell .stat-txt { font-family:'"Noto Sans SC"',sans-serif; font-size:11px; color:#777C82; margin-top:4px; line-height:1.5; }
+
+    /* 时间线 */
+    .tl-scroll { overflow-x:auto; padding-bottom:4px; }
+    .tl-scroll::-webkit-scrollbar { height:6px; }
+    .tl-scroll::-webkit-scrollbar-thumb { background:rgba(122,143,166,0.30); border-radius:8px; }
+    .tl-line { position:relative; display:flex; min-width:880px; margin-top:20px; }
+    .tl-line::before {
+      content:''; position:absolute; left:8px; right:8px; top:6px; height:2px;
+      background:linear-gradient(90deg, rgba(122,143,166,0.50), rgba(150,107,103,0.50));
+    }
+    .tl-node { position:relative; flex:1; padding-right:14px; }
+    .tl-node:last-child { padding-right:0; }
+    .tl-dot {
+      width:14px; height:14px; border-radius:50%; position:relative; z-index:1;
+      background:#F6F3EF; border:2.5px solid #7A8FA6;
+    }
+    .tl-node.is-ai .tl-dot { border-color:#966B67; background:#966B67; box-shadow:0 0 0 4px rgba(150,107,103,0.14); }
+    .tl-date { font-family:'"Noto Sans SC"',sans-serif; font-size:11px; color:#777C82; margin-top:11px; letter-spacing:0.2px; }
+    .tl-name { font-family:'Noto Serif SC',serif; font-size:13px; color:#3A3F44; margin-top:3px; }
+    .tl-desc { font-family:'"Noto Sans SC"',sans-serif; font-size:11px; color:#777C82; margin-top:4px; line-height:1.55; }
+
+    /* 生活照 油画相框 */
+    .photo-frame {
+      border-radius:14px 12px 15px 11px; overflow:hidden;
+      border:1px solid rgba(150,107,103,0.30);
+      box-shadow:0 6px 16px rgba(122,143,166,0.20);
+      background:rgba(230,213,201,0.4);
+    }
+    .photo-frame img {
+      width:100%; height:150px; object-fit:cover; display:block;
+      filter:saturate(0.92) contrast(0.98);
+      transition:transform 600ms cubic-bezier(0.22,0.61,0.36,1), filter 600ms ease;
+    }
+    .photo-frame:hover img { transform:scale(1.05); filter:saturate(1) contrast(1); }
+
+    /* vibecoding 五步闭环 */
+    .step-card {
+      background:rgba(184,208,201,0.14); border:1px solid rgba(184,208,201,0.45);
+      border-radius:16px 14px 17px 13px; padding:14px 12px; text-align:center;
+      transition:transform 500ms cubic-bezier(0.22,0.61,0.36,1), background 500ms ease;
+    }
+    .step-card:hover { transform:translateY(-4px); background:rgba(184,208,201,0.26); }
+    .step-card .step-idx { font-family:'Ma Shan Zheng','Noto Serif SC',serif; font-size:22px; color:#5f8073; line-height:1; }
+    .step-card .step-name { font-family:'Noto Serif SC',serif; font-size:14px; color:#3A3F44; margin-top:8px; }
+    .step-card .step-desc { font-family:'"Noto Sans SC"',sans-serif; font-size:11px; color:#777C82; margin-top:5px; line-height:1.5; }
+
+    /* 判断卡（三个只有做过才知道的判断） */
+    .judge-card {
+      border-radius:20px 18px 21px 17px; padding:20px; height:100%;
+      background:rgba(184,208,201,0.13); border:1.5px solid rgba(184,208,201,0.5);
+      transition:transform 500ms cubic-bezier(0.22,0.61,0.36,1), box-shadow 500ms ease, border-color 500ms ease;
+    }
+    .judge-card:hover { transform:translateY(-4px); box-shadow:0 14px 34px rgba(95,128,115,0.18); border-color:rgba(95,128,115,0.45); }
+    .judge-card .judge-tag { font-family:'"Noto Sans SC"',sans-serif; font-size:11px; color:#5f8073; letter-spacing:0.5px; }
+    .judge-card .judge-title { font-family:'Noto Serif SC',serif; font-size:17px; color:#3A3F44; margin-top:4px; }
+
+    /* =========================================================
+       页面三 · 实习与能力关键词
+    ========================================================= */
+    .exp-card {
+      border-radius:22px 20px 24px 18px; padding:20px; height:100%;
+      background:rgba(180,200,217,0.12); border:1.5px solid rgba(180,200,217,0.5);
+      transition:transform 500ms cubic-bezier(0.22,0.61,0.36,1), box-shadow 500ms ease, border-color 500ms ease;
+      display:flex; flex-direction:column;
+    }
+    .exp-card:hover { transform:translateY(-4px); box-shadow:0 14px 34px rgba(95,122,145,0.18); border-color:rgba(95,122,145,0.45); }
+    .exp-card .exp-row { display:flex; gap:8px; font-family:'"Noto Sans SC"',sans-serif; font-size:12.5px; line-height:1.65; }
+    .exp-card .exp-key { flex-shrink:0; font-family:'Noto Serif SC',serif; color:#5f7a91; }
+
+    .kw-card {
+      border-radius:20px 18px 21px 17px; padding:18px;
+      background:rgba(255,255,255,0.42); border:1.5px solid rgba(122,143,166,0.32);
+      transition:transform 500ms cubic-bezier(0.22,0.61,0.36,1), box-shadow 500ms ease, border-color 500ms ease;
+      display:flex; flex-direction:column;
+    }
+    .kw-card:hover { transform:translateY(-4px); box-shadow:0 14px 34px rgba(122,143,166,0.18); border-color:rgba(150,107,103,0.42); }
+    .kw-card .kw-id { font-family:'Ma Shan Zheng','Noto Serif SC',serif; font-size:24px; line-height:1; color:#5f7a91; }
+    .kw-card .kw-name { font-family:'Noto Serif SC',serif; font-size:14.5px; color:#3A3F44; line-height:1.45; }
+    .kw-card .kw-def { font-family:'"Noto Sans SC"',sans-serif; font-size:11.5px; color:#777C82; margin-top:5px; line-height:1.6; }
+    .kw-card .kw-body { font-family:'"Noto Sans SC"',sans-serif; font-size:12.5px; color:#595F66; line-height:1.75; }
+    .kw-tag {
+      font-family:'"Noto Sans SC"',sans-serif; font-size:10.5px; color:#5f7a91;
+      padding:2px 8px; border-radius:11px 9px 12px 8px;
+      background:rgba(180,200,217,0.18); border:1px solid rgba(180,200,217,0.45);
+      white-space:nowrap;
+    }
+
+    /* =========================================================
+       页面二 · 图片轮播专属样式
+    ========================================================= */
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .carousel-viewport {
+      position: relative;
+      aspect-ratio: 16/10;
+      overflow: hidden;
+      border-radius: 22px 20px 24px 18px / 20px 24px 18px 22px;
+      background: rgba(184,208,201,0.25);
+      border: 1.5px solid rgba(184,208,201,0.45);
+      box-shadow: 0 12px 40px rgba(184,208,201,0.25);
+    }
+    .carousel-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      display: flex;
+      transition: transform 600ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+    .carousel-slide {
+      flex-shrink: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .carousel-slide img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 16px 14px 18px 12px;
+      box-shadow: 0 8px 28px rgba(122,143,166,0.22);
+      transition: transform 500ms cubic-bezier(0.22,0.61,0.36,1), filter 500ms ease;
+    }
+    .carousel-slide.active img {
+      filter: saturate(1) contrast(1);
+    }
+    .carousel-slide:not(.active) img {
+      filter: saturate(0.85) contrast(0.95);
+    }
+    /* 文字型 slide（其他常用AI工具） */
+    .carousel-slide.text-slide {
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 32px 40px;
+    }
+    .text-slide-content {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+    .text-slide-title {
+      font-family: 'Ma Shan Zheng', 'Noto Serif SC', serif;
+      font-size: 34px;
+      color: #3A3F44;
+      letter-spacing: 2px;
+      position: relative;
+      padding-bottom: 14px;
+    }
+    .text-slide-title::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #7A8FA6, transparent);
+    }
+    .text-slide-tools {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .text-slide-tool {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 17px;
+      color: #595F66;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .text-slide-tool .check {
+      color: #5f8073;
+      font-weight: 600;
+    }
+    .text-slide-tool .tool-note {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 12px;
+      color: #777C82;
+      margin-left: 4px;
+    }
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 52px;
+      height: 52px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 6px 18px rgba(122,143,166,0.25);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 400ms cubic-bezier(0.22,0.61,0.36,1);
+      z-index: 10;
+    }
+    .carousel-nav:hover {
+      background: rgba(255,255,255,0.95);
+      transform: translateY(-50%) scale(1.08);
+      box-shadow: 0 10px 28px rgba(122,143,166,0.35);
+    }
+    .carousel-nav svg {
+      width: 20px;
+      height: 20px;
+      stroke: #7A8FA6;
+      stroke-width: 1.8;
+    }
+    .carousel-nav.prev { left: -26px; }
+    .carousel-nav.next { right: -26px; }
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .carousel-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(184,208,201,0.8);
+      background: rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: all 400ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+    .carousel-dot.active {
+      background: #7A8FA6;
+      border-color: #7A8FA6;
+      transform: scale(1.3);
+      box-shadow: 0 0 0 4px rgba(122,143,166,0.15);
+    }
+    .carousel-dot:hover {
+      background: rgba(122,143,166,0.4);
+      border-color: rgba(122,143,166,0.6);
+    }
+    .carousel-caption {
+      text-align: center;
+      margin-top: 18px;
+    }
+    .carousel-caption .caption-name {
+      font-family: 'Ma Shan Zheng', 'Noto Serif SC', serif;
+      font-size: 28px;
+      color: #3A3F44;
+      margin-bottom: 6px;
+    }
+    .carousel-caption .caption-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 14px;
+      color: #777C82;
+    }
+    .caption-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin-top: 12px; padding: 7px 16px; border-radius: 14px 12px 15px 11px;
+      font-family: 'Noto Sans SC', sans-serif; font-size: 12.5px; color: #fff;
+      background: #5f8073; box-shadow: 0 6px 16px rgba(95,128,115,0.30);
+      transition: transform 400ms cubic-bezier(0.22,0.61,0.36,1), box-shadow 400ms ease;
+    }
+    .caption-link:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(95,128,115,0.40); }
+    .caption-badge {
+      display: inline-block; margin-bottom: 8px;
+      font-family: 'Noto Sans SC', sans-serif; font-size: 11px; color: #5f8073;
+      padding: 3px 10px; border-radius: 12px 10px 13px 9px;
+      background: rgba(95,128,115,0.12); border: 1px solid rgba(95,128,115,0.32);
+    }
+    .carousel-counter {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 12px;
+      color: rgba(122,143,166,0.6);
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(4px);
+      padding: 6px 12px;
+      border-radius: 14px;
+    }
+    @media (max-width: 768px) {
+      .carousel-nav {
+        width: 44px;
+        height: 44px;
+      }
+      .carousel-nav.prev { left: -22px; }
+      .carousel-nav.next { right: -22px; }
+      .carousel-caption .caption-name { font-size: 22px; }
+      .carousel-caption .caption-desc { font-size: 12px; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 油画肌理 & 柔光 & 流体层 -->
+  <div id="canvas-texture"></div>
+  <div id="softlight-veil"></div>
+  <div id="fluid-layer"><div class="fluid-blob" id="fluidBlob"></div></div>
+
+  <!-- ================= 左侧固定导航 ================= -->
+  <nav class="fixed left-0 top-0 h-full w-60 z-20 flex flex-col justify-center px-5"
+       style="background: linear-gradient(180deg, rgba(246,243,239,0.92), rgba(230,213,201,0.55)); border-right:1.5px solid rgba(122,143,166,0.25); backdrop-filter: blur(4px);">
+    <div class="mb-10 pl-3">
+      <div class="font-hand text-3xl text-title leading-tight">申雨茜</div>
+      <div class="font-sans text-xs text-note mt-2 leading-relaxed">
+        邮箱：shenyq2027@163.com<br />电话：189-7830-3412
+      </div>
+      <div class="mt-3 h-px w-16" style="background:linear-gradient(90deg,#966B67,transparent);"></div>
+    </div>
+
+    <ul class="flex flex-col gap-2" id="navList">
+      <li class="nav-item active rounded-xl px-4 py-3" data-target="page-1">
+        <span class="brush"></span>
+        <div class="font-serif text-base text-title">页面一</div>
+        <div class="font-sans text-xs text-note mt-0.5">我的基础信息</div>
+      </li>
+      <li class="nav-item rounded-xl px-4 py-3 text-body" data-target="page-2">
+        <span class="brush"></span>
+        <div class="font-serif text-base">页面二</div>
+        <div class="font-sans text-xs text-note mt-0.5">我对AI的探索</div>
+      </li>
+      <li class="nav-item rounded-xl px-4 py-3 text-body" data-target="page-3">
+        <span class="brush"></span>
+        <div class="font-serif text-base">页面三</div>
+        <div class="font-sans text-xs text-note mt-0.5">我的实习经历</div>
+      </li>
+    </ul>
+
+    <div class="mt-10 pl-4 font-sans text-[11px] text-note leading-relaxed">
+      吉林大学 · 金融学 · 2027届<br />出海增长 × AI · 运营策略
+    </div>
+  </nav>
+
+  <!-- ================= 主内容区 ================= -->
+  <main id="main-scroll" class="relative z-10 ml-60 h-screen overflow-y-auto px-10 lg:px-16 xl:px-24 py-12">
+
+    <!-- ============ 页面一 ｜ 我的基础信息 ============ -->
+    <section id="page-1" class="page active max-w-6xl mx-auto">
+      <!-- 页头 -->
+      <div class="reveal mb-8">
+        <div class="flex items-end gap-4">
+          <h1 class="font-hand text-5xl text-title leading-none">我的基础信息</h1>
+          <span class="font-serif text-note text-sm mb-1">/ Basic Profile</span>
+        </div>
+        <p class="font-sans text-body mt-3 max-w-2xl leading-relaxed">
+          出海增长 × AI ｜ 把一件事从 0 做到能跑。
+        </p>
+        <div class="mt-4 h-px w-full" style="background:linear-gradient(90deg,#966B67,rgba(150,107,103,0.05));"></div>
+      </div>
+
+      <!-- 三个概览数字 -->
+      <div class="reveal mb-8">
+        <div class="oil-card p-6 grid grid-cols-3 items-center">
+          <div class="stat-cell">
+            <div class="stat-num">3</div>
+            <div class="stat-txt">段实习<br />电商 / 投放 / AI 产品</div>
+          </div>
+          <div class="stat-cell" style="border-left:1px solid rgba(122,143,166,0.20);border-right:1px solid rgba(122,143,166,0.20);">
+            <div class="stat-num">5</div>
+            <div class="stat-txt">个可访问的<br />线上作品</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">634</div>
+            <div class="stat-txt">项自动化测试<br />全绿</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 顶部 Tab 切换 -->
+      <div class="reveal mb-8">
+        <div class="inline-flex gap-1 p-1 rounded-2xl" style="background:rgba(230,213,201,0.45);border:1px solid rgba(122,143,166,0.22);">
+          <button class="p1-tab px-5 py-2 rounded-xl font-serif text-sm transition" data-tab="all">全部概览</button>
+          <button class="p1-tab px-5 py-2 rounded-xl font-serif text-sm transition" data-tab="identity">身份意向</button>
+          <button class="p1-tab px-5 py-2 rounded-xl font-serif text-sm transition" data-tab="skill">荣誉技能</button>
+          <button class="p1-tab px-5 py-2 rounded-xl font-serif text-sm transition" data-tab="contact">联系方式</button>
+        </div>
+      </div>
+
+      <!-- 三张信息卡片 横向平铺 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- 卡片1 身份意向 -->
+        <div class="p1-card reveal oil-card p-6 flex flex-col" data-card="identity">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(122,143,166,0.16);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <h3 class="font-serif text-lg text-title">身份与意向</h3>
+          </div>
+          <ul class="font-sans text-sm text-body space-y-3 leading-relaxed flex-1">
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">姓名</span><span>申雨茜</span></li>
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">院校</span><span>吉林大学 · 经济学院 金融学 · 2027 届</span></li>
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">意向</span><span>用户增长 / 电商运营 / 策略运营</span></li>
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">到岗</span><span>即刻到岗 · 可实习 6 个月以上</span></li>
+            <li class="flex gap-2"><span class="text-data font-serif shrink-0">城市</span><span>北京 / 上海 / 深圳（可协商）</span></li>
+          </ul>
+          <div class="mt-5 pt-4 font-hand text-data text-lg" style="border-top:1px dashed rgba(150,107,103,0.3);">
+            “把一件事从 0 做到能跑。”
+          </div>
+        </div>
+
+        <!-- 卡片2 荣誉与技能调色盘 -->
+        <div class="p1-card reveal oil-card p-6 flex flex-col" data-card="skill">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(150,107,103,0.16);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#966B67" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2 2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-11-10z"/></svg>
+            </span>
+            <h3 class="font-serif text-lg text-title">荣誉与技能调色盘</h3>
+          </div>
+
+          <div class="mb-5">
+            <div class="font-sans text-xs text-note mb-2.5">核心能力 · 12 个能力关键词 × 3 个板块</div>
+            <div class="space-y-2.5">
+              <div class="flex items-start gap-2">
+                <span class="font-sans text-[11px] shrink-0 pt-1.5" style="color:#7A8FA6;width:52px;">用户增长</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="kw-chip">用户分层</span><span class="kw-chip">漏斗拆解</span><span class="kw-chip">实验设计</span><span class="kw-chip">激活留存</span>
+                </div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-sans text-[11px] shrink-0 pt-1.5" style="color:#966B67;width:52px;">电商运营</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="kw-chip">活动全链路</span><span class="kw-chip">商品优惠策略</span><span class="kw-chip">埋点看板</span><span class="kw-chip">内容私域</span>
+                </div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="font-sans text-[11px] shrink-0 pt-1.5" style="color:#5f7a91;width:52px;">策略运营</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="kw-chip">指标体系</span><span class="kw-chip">异常归因</span><span class="kw-chip">数据基建</span><span class="kw-chip">预算与 ROI</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-auto">
+            <div class="font-sans text-xs text-note mb-2">荣誉标签</div>
+            <div class="flex flex-wrap gap-2">
+              <span class="skill-chip">宝洁校园大使 · 全国 TOP5 · 免面绿卡</span>
+              <span class="skill-chip">GPA 3.56/4 · 排名 32/125</span>
+              <span class="skill-chip">韩语工作台 634 项测试全绿</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片3 联系方式 + PDF 下载 -->
+        <div class="p1-card reveal oil-card p-6 flex flex-col" data-card="contact">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(184,208,201,0.35);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5f8073" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </span>
+            <h3 class="font-serif text-lg text-title">联系方式</h3>
+          </div>
+
+          <ul class="font-sans text-sm text-body space-y-3 leading-relaxed flex-1">
+            <li class="flex items-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" fill="none"/><path d="M22 6l-10 7L2 6"/></svg>
+              <span>shenyq2027@163.com</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>189-7830-3412</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span>微信 / WeChat: 189-7830-3412</span>
+            </li>
+          </ul>
+
+          <!-- 生活照 · 双图 -->
+          <div class="mt-5 grid grid-cols-2 gap-3">
+            <figure class="photo-frame">
+              <img src="photos/tianchi.jpg" alt="申雨茜在长白山天池的生活照" loading="lazy" />
+            </figure>
+            <figure class="photo-frame">
+              <img src="photos/ferriswheel.jpg" alt="申雨茜在摩天轮前的生活照" loading="lazy" />
+            </figure>
+          </div>
+
+          <a id="downloadPortfolio" href="portfolio.pdf" download="申雨茜-运营策略作品集-2026.pdf"
+             class="mt-5 inline-flex items-center justify-center gap-2 py-3 rounded-xl font-serif text-sm text-white transition"
+             style="background:#7A8FA6;box-shadow:0 6px 16px rgba(122,143,166,0.35);">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            下载作品集 PDF
+          </a>
+          <a id="downloadPdf" href="resume.pdf?v=20260930" download="申雨茜-吉林大学-18978303412.pdf"
+             class="mt-3 inline-flex items-center justify-center gap-2 py-3 rounded-xl font-serif text-sm transition"
+             style="border:1.5px solid rgba(122,143,166,0.45);color:#7A8FA6;background:rgba(255,255,255,0.35);">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            下载简历 PDF
+          </a>
+        </div>
+      </div>
+
+      <!-- 时间线 -->
+      <div class="reveal mt-6">
+        <div class="oil-card p-6">
+          <div class="flex items-end justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-full flex items-center justify-center" style="background:rgba(122,143,166,0.16);">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7A8FA6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+              </span>
+              <h3 class="font-serif text-lg text-title">我的经历，一条线</h3>
+            </div>
+            <span class="font-sans text-xs text-note">7 个节点 · 从校园到三段实习，中间那条 AI 项目线是自发的</span>
+          </div>
+
+          <div class="tl-scroll">
+            <div class="tl-line">
+              <div class="tl-node">
+                <div class="tl-dot"></div>
+                <div class="tl-date">2023.09</div>
+                <div class="tl-name">吉林大学</div>
+                <div class="tl-desc">经济学院 金融学<br />GPA 3.56/4 · 排名 32/125</div>
+              </div>
+              <div class="tl-node">
+                <div class="tl-dot"></div>
+                <div class="tl-date">2024.06–2025.06</div>
+                <div class="tl-name">宝洁（中国）</div>
+                <div class="tl-desc">校园大使 · 春招项目 PM<br />直播 596 人 · 全国 TOP5 · 免面绿卡</div>
+              </div>
+              <div class="tl-node">
+                <div class="tl-dot"></div>
+                <div class="tl-date">2026.01–04</div>
+                <div class="tl-name">回旋加速</div>
+                <div class="tl-desc">UG 中心 · 出海投放<br />3 地区 9 个账户 · 日流水 $2,000–4,000</div>
+              </div>
+              <div class="tl-node is-ai">
+                <div class="tl-dot"></div>
+                <div class="tl-date">2026.03–</div>
+                <div class="tl-name">AI 项目线</div>
+                <div class="tl-desc">vibecoding<br />5 个从 0 到能跑的单文件产品</div>
+              </div>
+              <div class="tl-node">
+                <div class="tl-dot"></div>
+                <div class="tl-date">2026.06–08</div>
+                <div class="tl-name">减龄科技</div>
+                <div class="tl-desc">市场增长部 · 电商产品运营<br />加价购成交 +24.6% · 老客占比 29%</div>
+              </div>
+              <div class="tl-node">
+                <div class="tl-dot"></div>
+                <div class="tl-date">2026.08–今</div>
+                <div class="tl-name">Shopee</div>
+                <div class="tl-desc">AI 事业部 · Migoo AI 助手<br />3 渠道归因体系 · 激活率约 20%</div>
+              </div>
+              <div class="tl-node">
+                <div class="tl-dot"></div>
+                <div class="tl-date">2026.09</div>
+                <div class="tl-name">韩语工作台 v1.5</div>
+                <div class="tl-desc">单文件 1.28 MB<br />634 项测试全绿</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页面二 ｜ 我对AI的探索 -->
+    <section id="page-2" class="page max-w-6xl mx-auto">
+      <div class="reveal mb-8">
+        <div class="flex items-end gap-4">
+          <h1 class="font-hand text-5xl text-title leading-none">我对AI的探索</h1>
+          <span class="font-serif text-note text-sm mb-1">/ AI Exploration</span>
+        </div>
+        <p class="font-sans text-body mt-3 max-w-2xl leading-relaxed">
+          我会用 AI，把一件事从 0 做到能跑 —— 不是“会用工具”，是能定义问题、能定边界、能验收结果。
+        </p>
+        <div class="mt-4 h-px w-full" style="background:linear-gradient(90deg,#5f8073,rgba(95,128,115,0.05));"></div>
+      </div>
+
+      <div class="reveal">
+        <div class="carousel-container">
+          <button class="carousel-nav prev" id="carouselPrev" aria-label="上一张">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="carousel-nav next" id="carouselNext" aria-label="下一张">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+
+          <div class="carousel-viewport">
+            <div class="carousel-counter" id="carouselCounter">1 / 7</div>
+            <div class="carousel-track" id="carouselTrack"></div>
+          </div>
+
+          <div class="carousel-dots" id="carouselDots"></div>
+
+          <div class="carousel-caption" id="carouselCaption">
+            <div id="captionBadge" class="caption-badge"></div>
+            <div class="caption-name" id="captionName"></div>
+            <div class="caption-desc" id="captionDesc"></div>
+            <a id="captionLink" class="caption-link" target="_blank" rel="noopener noreferrer"></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- vibecoding 五步闭环 -->
+      <div class="reveal mt-12">
+        <div class="oil-card p-6" style="border-color:rgba(184,208,201,0.45);background:rgba(184,208,201,0.12);">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(184,208,201,0.4);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5f8073" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </span>
+            <h3 class="font-serif text-base text-title">我的 vibecoding 五步闭环</h3>
+          </div>
+          <p class="font-sans text-sm text-body leading-relaxed">
+            把“用 AI 帮我写点东西”变成一条有验收标准的流水线 —— 这是我和 AI 的分工方式，也是我给自己定的规矩。
+          </p>
+
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-5">
+            <div class="step-card"><div class="step-idx">①</div><div class="step-name">写下来</div><div class="step-desc">需求 → PRD</div></div>
+            <div class="step-card"><div class="step-idx">②</div><div class="step-name">拆到能验收</div><div class="step-desc">每条能判对错</div></div>
+            <div class="step-card"><div class="step-idx">③</div><div class="step-name">分派给 AI</div><div class="step-desc">我定边界</div></div>
+            <div class="step-card"><div class="step-idx">④</div><div class="step-name">自己跑一遍</div><div class="step-desc">真浏览器 + 真文件</div></div>
+            <div class="step-card"><div class="step-idx">⑤</div><div class="step-name">沉淀成可复用</div><div class="step-desc">spec / skill</div></div>
+          </div>
+
+          <p class="font-sans text-xs text-note mt-4">做完的产品再回到第 ① 步 —— 下一个需求从这次的验收标准里长出来。</p>
+
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-4 pt-4 font-sans text-xs leading-relaxed"
+               style="border-top:1px dashed rgba(184,208,201,0.6);color:#595F66;">
+            <span>我定需求 / 边界 / 验收口径</span><span class="text-note">｜</span>
+            <span>AI 写代码改样式</span><span class="text-note">｜</span>
+            <span>真浏览器 + 真文件验收</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 三个只有做过才知道的判断 -->
+      <div class="reveal mt-10 mb-5">
+        <div class="flex items-center gap-3">
+          <span class="font-hand text-2xl" style="color:#5f8073;">三个只有做过才知道的判断</span>
+          <div class="flex-1 h-px" style="background:linear-gradient(90deg,rgba(95,128,115,0.3),rgba(95,128,115,0.05));"></div>
+        </div>
+        <p class="font-sans text-xs text-note mt-2">这一页不证明我会写代码，它证明我有产品判断力。三件事都是真的发生过的。</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="reveal judge-card">
+          <div class="judge-tag">① 问题重定义 · 实测</div>
+          <div class="judge-title">不是“用户没热情”，是“产品没给入口”</div>
+          <p class="font-sans text-[12.5px] text-body leading-relaxed mt-3">
+            我自己的飞书词表里，1141 行的「重要搭配」被填满了（<b>86.5%</b>），但「复习」和「见过」两列是 <b>0%</b> —— 一格都没填。
+          </p>
+          <p class="font-sans text-[12.5px] text-body leading-relaxed mt-2">
+            不是“我不自律”，是那两列根本没法用（要点开单元格 → 选下拉 → 一次只能弄一个词）。这就是用户洞察该有的样子：有数据、反直觉、且直接指向解法。
+          </p>
+        </div>
+        <div class="reveal judge-card">
+          <div class="judge-tag">② 静默失败 · 实测</div>
+          <div class="judge-title">程序不崩、不报错，只是安静地给你错的东西</div>
+          <p class="font-sans text-[12.5px] text-body leading-relaxed mt-3">
+            取 PDF 里的韩文时同一页有多个字体，同一个编号 <b>&lt;063F&gt;</b> 在正文字体里是「보」，在另一字体里是「법」。合并成一张大写表就会串字 —— 而且它不报错。
+          </p>
+          <p class="font-sans text-[12.5px] text-body leading-relaxed mt-2">
+            修法不是改代码，是专门写一条断言去测“容易混淆的那一对”。
+          </p>
+        </div>
+        <div class="reveal judge-card">
+          <div class="judge-tag">③ 承认边界</div>
+          <div class="judge-title">别把“逐词直译”包装成“翻译”</div>
+          <p class="font-sans text-[12.5px] text-body leading-relaxed mt-3">
+            我想做「日记翻译」，但离线单文件只有 800KB，塞不下翻译模型。于是按钮改名叫「<b>逐词解析</b>」。
+          </p>
+          <p class="font-sans text-[12.5px] text-body leading-relaxed mt-2">
+            同一种技术，用户从“这也叫翻译？”变成“哦，原来我这句用了这些词”。承认能力边界，而不是伪造能力 —— 这条被我写进了自己的设计公理 A4。
+          </p>
+        </div>
+      </div>
+
+      <div class="reveal mt-8">
+        <div class="oil-card p-5 text-center" style="border-color:rgba(184,208,201,0.45);">
+          <p class="font-hand text-xl" style="color:#5f8073;">「能不能做到」和「该不该这么做」，是两个问题。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页面三 ｜ 我的实习经历 -->
+    <section id="page-3" class="page max-w-6xl mx-auto">
+      <!-- 页头 -->
+      <div class="reveal mb-8">
+        <div class="flex items-end gap-4">
+          <h1 class="font-hand text-5xl text-title leading-none">我的实习经历</h1>
+          <span class="font-serif text-note text-sm mb-1">/ Internship</span>
+        </div>
+        <p class="font-sans text-body mt-3 max-w-2xl leading-relaxed">
+          三段实习，一套方法 —— 拆结构 → 找证据 → 验假设 → 沉淀规则。12 个能力关键词，每一条都能追到一个数字。
+        </p>
+        <div class="mt-4 h-px w-full" style="background:linear-gradient(90deg,#5f7a91,rgba(95,122,145,0.05));"></div>
+      </div>
+
+      <!-- 三段实习 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-10">
+
+        <!-- Shopee -->
+        <div class="reveal exp-card">
+          <div class="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-serif text-lg text-title leading-tight">Shopee</h3>
+              <div class="font-sans text-xs text-body mt-1">AI 事业部 · Migoo AI 助手 · AI 产品增长</div>
+            </div>
+            <span class="kw-tag">2026.08–今</span>
+          </div>
+          <div class="space-y-3 flex-1">
+            <div class="exp-row"><span class="exp-key">命题</span><span>数据跑得快但口径不统一；日本冷启动</span></div>
+            <div class="exp-row"><span class="exp-key">动作</span><span>先统口径再谈优化：搭数据底表与看板，跑通邮件 / KOL / 社群三渠道归因，再拆增量来源</span></div>
+            <div class="exp-row"><span class="exp-key">结果</span><span>邮件发出后激活率约 <b>20%</b>；累计发出约 4,000 封、失败率 3%–4%；单地区 App Store 评分最高 <b>+0.7</b></span></div>
+          </div>
+          <div class="mt-4 pt-3 font-hand text-base" style="border-top:1px dashed rgba(180,200,217,0.6);color:#5f7a91;">
+            在错误的共同口径上，团队会加速跑错。
+          </div>
+        </div>
+
+        <!-- 减龄科技 -->
+        <div class="reveal exp-card">
+          <div class="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-serif text-lg text-title leading-tight">减龄科技</h3>
+              <div class="font-sans text-xs text-body mt-1">市场增长部 · 电商产品运营</div>
+            </div>
+            <span class="kw-tag">2026.06–08</span>
+          </div>
+          <div class="space-y-3 flex-1">
+            <div class="exp-row"><span class="exp-key">命题</span><span>小程序私域日活下跌、老客流失、新客转化率低</span></div>
+            <div class="exp-row"><span class="exp-key">动作</span><span>分层唤醒 + 新品首单带动双线；活动按「选品 → 机制 → 埋点 → 复盘」走完全链路</span></div>
+            <div class="exp-row"><span class="exp-key">结果</span><span>加价购成交金额 <b>+24.6%</b>、支付转化 +0.8pp；单品复购 +20%、平台日活 +20%</span></div>
+          </div>
+          <div class="mt-4 pt-3 font-hand text-base" style="border-top:1px dashed rgba(180,200,217,0.6);color:#5f7a91;">
+            增长的第一个动作不是加预算，是先确认存量有没有被用起来。
+          </div>
+        </div>
+
+        <!-- 回旋加速 -->
+        <div class="reveal exp-card">
+          <div class="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-serif text-lg text-title leading-tight">回旋加速</h3>
+              <div class="font-sans text-xs text-body mt-1">UG 中心 · 出海投放</div>
+            </div>
+            <span class="kw-tag">2026.01–04</span>
+          </div>
+          <div class="space-y-3 flex-1">
+            <div class="exp-row"><span class="exp-key">命题</span><span>新渠道消耗低效、数据异常波动、变现效率不稳</span></div>
+            <div class="exp-row"><span class="exp-key">动作</span><span>先证伪再归因：用单变量验证推翻“素材疲劳”，定位到周末流量结构偏移，再把结论做成 SOP</span></div>
+            <div class="exp-row"><span class="exp-key">结果</span><span>周末效应处理减少无效消耗 <b>25%</b>、账户运营效率 <b>+30%</b></span></div>
+          </div>
+          <div class="mt-4 pt-3 font-hand text-base" style="border-top:1px dashed rgba(180,200,217,0.6);color:#5f7a91;">
+            一次错误的诊断，成本远高于一次迟到的优化。
+          </div>
+        </div>
+      </div>
+
+      <!-- 能力关键词 标题 -->
+      <div class="reveal mb-4">
+        <div class="flex items-center gap-3">
+          <span class="font-hand text-2xl text-data">12 个能力关键词与它们的证据</span>
+          <div class="flex-1 h-px" style="background:linear-gradient(90deg,rgba(150,107,103,0.3),rgba(150,107,103,0.05));"></div>
+        </div>
+        <p class="font-sans text-xs text-note mt-2">
+          数据三档：🔵 实测（后台 / BI 可回溯）· 🟣 产出（PRD / SOP / 看板）· ⚪ 推演（已标注，未执行）｜不使用：模拟数据 · 搬运数据 · 行业公开参考值当作个人成绩
+        </p>
+      </div>
+
+      <!-- ① 用户增长 -->
+      <div class="reveal mb-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-serif text-sm"
+             style="background:rgba(122,143,166,0.12);border:1px solid rgba(122,143,166,0.28);color:#7A8FA6;">
+          ① 用户增长
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K1</span>
+            <div class="flex-1">
+              <div class="kw-name">用户分层与全生命周期运营</div>
+              <div class="kw-def">把“所有用户”拆成几群行为不同的人，每群给不同策略。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            90 天复购漏斗：首单 55,681 → 两次 23,503（42%）→ 三次 12,512（53%）→ 四次 7,251（58%）→ 五次 4,408（60%）；7 日成交老客 24%、本月 29%，且连续三个月卡在 29%；老客池约 5 万人，周活跃仅约 15%。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">减龄</span><span class="kw-tag">🔵 实测</span><span class="kw-tag">90 天复购漏斗</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K2</span>
+            <div class="flex-1">
+              <div class="kw-name">漏斗拆解与指标口径修正</div>
+              <div class="kw-def">增长问题先看“哪一层在漏”，而不是先加预算。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            <b>Shopee</b>：拆解安装量上升现象，确认 Android 是增量来源（占全局 40%、占日本地区 80%），为投放策略变更提供依据。<br />
+            <b>减龄</b>：搭出曝光 → 点击 → 加购 → 下单 → 支付的全链路埋点漏斗 —— 第一次把“活动做完看数据”变成“活动上线前先定口径”。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">Shopee</span><span class="kw-tag">减龄</span><span class="kw-tag">🟣 产出</span><span class="kw-tag">Android 占全球 40%</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K3</span>
+            <div class="flex-1">
+              <div class="kw-name">实验设计与 AB 验证</div>
+              <div class="kw-def">结论必须能被对照组否掉，否则只是观察。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            <b>回旋</b>：面对“素材疲劳”的既定判断，自己拆对照组验证、用单变量否掉了它（详见 K10）。<br />
+            <b>减龄</b>：活动 PRD 内置两套 AB 方案（文案利益点 / 触达渠道），配套 <b>12 个埋点事件</b>与漏斗看板。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">回旋</span><span class="kw-tag">减龄</span><span class="kw-tag">🟣 产出</span><span class="kw-tag">两套 AB 方案</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K4</span>
+            <div class="flex-1">
+              <div class="kw-name">激活、留存与召回</div>
+              <div class="kw-def">拉新只是开始，留得住才算数。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            <b>Shopee</b>：跑通邮件 / KOL / 社群三条触达渠道后，邮件发出后的激活率约 <b>20%</b>（分母为实际发出邮件数）；同期累计发出约 4,000 封、发送失败率 3%–4%；单地区 App Store 评分最高 +0.7。<br />
+            <b>减龄</b>：单品复购率 +20%、平台日活 +20%。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">Shopee</span><span class="kw-tag">减龄</span><span class="kw-tag">激活率约 20%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② 电商运营 -->
+      <div class="reveal mb-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-serif text-sm"
+             style="background:rgba(150,107,103,0.12);border:1px solid rgba(150,107,103,0.28);color:#966B67;">
+          ② 电商运营
+        </div>
+        <p class="font-sans text-xs text-note mt-2">从选品、机制、埋点到复盘，一条链自己走完 —— 这一段我手上是有真实前后对比数据的。</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K5</span>
+            <div class="flex-1">
+              <div class="kw-name">活动全链路运营</div>
+              <div class="kw-def">活动不是做完看数据，是上线前先定口径。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            加价购活动：用成人 / 儿童益生菌下单页「+49 元换购原价 59 元益生元纤维粉」的机制带动新品首购。复盘结论：购买理由成立，但入口挂在下单页、带不来新增曝光，所以销售增量有限 → 据此提出把入口从下单页扩展到首页 Banner 与单品卡。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">减龄</span><span class="kw-tag">🔵 实测</span><span class="kw-tag">纤维粉 · 有赞后台</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K6</span>
+            <div class="flex-1">
+              <div class="kw-name">商品与优惠策略</div>
+              <div class="kw-def">券和折扣是杠杆，不是让利。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            辅助配置「无门槛券」「新人券」并持续追踪领取率 / 使用率 / 客单价；跟踪 20 个海内外电商拉新活动动态并形成可复用报告。供给端“预售转现货”纠错后，各品前后各 7 天日均销量：成人益生菌 <b>+433.8%</b>、儿童益生菌 <b>+398.7%</b>、肌酸 +84.2%、纤维粉 +23.0%。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">减龄</span><span class="kw-tag">🔵 实测</span><span class="kw-tag">预售转现货</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K7</span>
+            <div class="flex-1">
+              <div class="kw-name">埋点与数据看板</div>
+              <div class="kw-def">先定义指标口径，再谈优化。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            为活动首次建立 <b>12 个核心埋点事件</b>（每个事件带 user_id + 关键属性），配套核心指标（GMV / CVR / DAU / 复购率）+ 过程指标（UV / CTR / 浏览深度）看板，实现页面 UV → 订阅率 → 支付转化率的全链路追踪；沉淀 7 步分析法。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">减龄</span><span class="kw-tag">🟣 产出</span><span class="kw-tag">12 个埋点事件</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K8</span>
+            <div class="flex-1">
+              <div class="kw-name">内容增长与私域社群</div>
+              <div class="kw-def">内容要懂用户，不是懂排版。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            搭建校园内容增长矩阵，产出推文 20+、创意海报 16 组，年累计阅读 5w+，关键节点阅读峰值 4000+；统筹校园首场招聘直播，全程参与 596 人、后台咨询 60+，项目数据位列全国高校 TOP5，获评“优秀校园大使”并拿到免面绿卡。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">宝洁</span><span class="kw-tag">🔵 实测</span><span class="kw-tag">全国 TOP5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ 策略运营 -->
+      <div class="reveal mb-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-serif text-sm"
+             style="background:rgba(180,200,217,0.22);border:1px solid rgba(180,200,217,0.5);color:#5f7a91;">
+          ③ 策略运营
+        </div>
+        <p class="font-sans text-xs text-note mt-2">把判断沉淀成规则，比“多调几次”值钱。</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K9</span>
+            <div class="flex-1">
+              <div class="kw-name">指标体系搭建</div>
+              <div class="kw-def">挑一个北极星，再配一组能解释它的过程指标。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            搭建「消耗 – ROAS – 留存」指标体系，负责 3 个地区 9 个账户，日投放流水 $2,000–4,000（单账户约 $1,000）；公司给我的硬指标是 14 日 ROI 回正（回收线 1.1）—— 我负责让账户稳定在这个水位上。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">回旋</span><span class="kw-tag">🔵 实测</span><span class="kw-tag">3 地区 9 账户</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K10</span>
+            <div class="flex-1">
+              <div class="kw-name">异常归因与 SOP 化响应</div>
+              <div class="kw-def">一次错误诊断的成本，远高于一次迟到的优化。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            <b>现象</b>：一个周日，ROI 从 49% 掉到 34.9%、CTR 从 16% 掉到 9%，当天没有任何活动。<br />
+            <b>证伪</b>：带教的假设是“素材疲劳”，我去看频次 1.1–1.9 属正常区间 → 否掉这个假设。<br />
+            <b>归因</b>：沿成本端 / 收益端往下拆，定位到周末用户构成变化。<br />
+            <b>动作</b>：按用户质量重新分配时段预算（周五加量 / 周末降速），写成常规检查项。<br />
+            <b>沉淀</b>：把 ROAS 波动 / CTR 骤降 / CPM 异常拆成 4 类路径，配快速响应 checklist。<br />
+            <b>结果</b>：周末效应处理减少无效消耗 <b>25%</b>、账户运营效率 +30%。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">回旋</span><span class="kw-tag">🔵 实测</span><span class="kw-tag">无效消耗 −25%</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K11</span>
+            <div class="flex-1">
+              <div class="kw-name">数据基建与自动化提效</div>
+              <div class="kw-def">让数据不依赖“我记得”。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            waitlist 数据看板 V1 → 全局版，加入“邮件发出量 + 发出后的激活效果”“学生状态 → 工作状态”两个维度；用自动工作流 update 数据异动，核心表实现 <b>5 分钟更新一次</b>。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">Shopee</span><span class="kw-tag">🔵 实测</span><span class="kw-tag">5 分钟更新</span>
+          </div>
+        </div>
+
+        <div class="reveal kw-card">
+          <div class="flex items-start gap-3 mb-2">
+            <span class="kw-id">K12</span>
+            <div class="flex-1">
+              <div class="kw-name">预算分配与 ROI / CAC 测算</div>
+              <div class="kw-def">加预算前先算清楚“回得来吗”。</div>
+            </div>
+          </div>
+          <p class="kw-body flex-1">
+            按「消耗 × ROI」二维矩阵做资源分层（核心组 +20%–30%、问题组先砍半排查、潜力组提价扩受众、废组关停）；墨西哥 CPM 是印尼的 <b>3.5 倍</b>，但 LTV 是 <b>3–3.9 倍</b> —— 据此判断“贵不等于贵”。减龄侧在预算仅 ¥1,200 下完成让利比例与收益可行性判断。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px dashed rgba(122,143,166,0.28);">
+            <span class="kw-tag">回旋</span><span class="kw-tag">减龄</span><span class="kw-tag">🔵 实测</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 三句自评 -->
+      <div class="reveal mt-10">
+        <div class="oil-card p-6" style="border-color:rgba(150,107,103,0.32);background:rgba(230,213,201,0.22);">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(150,107,103,0.18);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#966B67" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </span>
+            <h3 class="font-serif text-lg text-title">三句自评</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <div class="font-sans text-[11px] text-data mb-1.5">强匹配</div>
+              <p class="font-sans text-sm text-body leading-relaxed">数据敏感 + 全链路执行 + 能把工具自己造出来。</p>
+            </div>
+            <div>
+              <div class="font-sans text-[11px] text-data mb-1.5">需成长（我说真话）</div>
+              <p class="font-sans text-sm text-body leading-relaxed">还没做过 0→1 的完整业务负责人；归因体系里“完整 ROI 推导”这类公司级口径，我拿不到。</p>
+            </div>
+            <div>
+              <div class="font-sans text-[11px] text-data mb-1.5">我的判断纪律</div>
+              <p class="font-sans text-sm text-body leading-relaxed">先统口径再谈优化 · 先证伪再归因 · 样本不够时不下结论。</p>
+            </div>
+          </div>
+          <div class="mt-5 pt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-sans text-xs text-note" style="border-top:1px dashed rgba(150,107,103,0.3);">
+            <span>可现场演示：简历工作室 · 「今天又学了些什么」</span>
+            <span>｜</span>
+            <span>另有 5 个线上作品见「我对AI的探索」</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= 右下角常驻悬浮控制面板（可折叠） ================= -->
+  <div id="control-panel" class="fixed right-6 bottom-6 z-30">
+    <!-- 折叠时的圆形按钮 -->
+    <button id="panelToggle" aria-label="打开控制面板"
+      class="oil-card w-14 h-14 flex items-center justify-center text-ink hover:text-data"
+      style="border-radius:50%;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+
+    <!-- 展开面板 -->
+    <div id="panelBody" class="oil-card absolute right-0 bottom-16 w-72 p-5 origin-bottom-right hidden">
+      <div class="flex items-center justify-between mb-4">
+        <span class="font-serif text-title text-lg">舒缓控制台</span>
+        <button id="panelClose" class="text-note hover:text-data" aria-label="收起">✕</button>
+      </div>
+
+      <!-- 白噪音 -->
+      <div class="mb-5">
+        <div class="font-sans text-sm text-body mb-2">环境白噪音</div>
+        <div class="flex gap-2 mb-3">
+          <button class="noise-btn flex-1 py-2 rounded-xl text-xs font-sans border transition" data-noise="rain"
+            style="border-color:rgba(122,143,166,0.4);color:#595F66;">雨林细雨</button>
+          <button class="noise-btn flex-1 py-2 rounded-xl text-xs font-sans border transition" data-noise="cafe"
+            style="border-color:rgba(122,143,166,0.4);color:#595F66;">午后咖啡馆</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="muteBtn" class="text-ink hover:text-data" aria-label="静音">
+            <svg id="muteIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+          </button>
+          <input type="range" id="volume" min="0" max="100" value="0" class="flex-1" />
+          <span id="volLabel" class="font-sans text-xs text-note w-8 text-right">0</span>
+        </div>
+      </div>
+
+      <!-- 肌理强度 -->
+      <div class="mb-5">
+        <div class="flex justify-between font-sans text-sm text-body mb-2">
+          <span>油画肌理强度</span><span id="texLabel" class="text-note">45</span>
+        </div>
+        <input type="range" id="texture" min="0" max="100" value="45" class="w-full" />
+        <div class="flex justify-between font-sans text-[10px] text-note mt-1"><span>光滑</span><span>厚重颗粒</span></div>
+      </div>
+
+      <!-- 柔光开关 -->
+      <div class="flex items-center justify-between">
+        <span class="font-sans text-sm text-body">全局柔光护眼</span>
+        <button id="softlightBtn" role="switch" aria-checked="false"
+          class="relative w-12 h-6 rounded-full transition" style="background:rgba(122,143,166,0.3);">
+          <span id="softlightKnob" class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform" style="box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 隐藏音频元素（在线免费无版权环境音，阶段4接入音量控制） -->
+  <audio id="audio-rain" loop crossorigin="anonymous" preload="none"
+    src="https://cdn.pixabay.com/audio/2022/03/10/audio_2d0a2d3f0a.mp3"></audio>
+  <audio id="audio-cafe" loop crossorigin="anonymous" preload="none"
+    src="https://cdn.pixabay.com/audio/2021/08/09/audio_b1a7b1c7f9.mp3"></audio>
+
+  <script>
+    /* =========================================================
+       阶段2 · 全局交互脚本
+    ========================================================= */
+    const root = document.documentElement;
+
+    /* ---------- localStorage 参数缓存 ---------- */
+    const STORE_KEY = 'syq_portfolio_settings';
+    const settings = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    function saveSettings() { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); }
+
+    /* ---------- 页面切换 ---------- */
+    const navItems = document.querySelectorAll('.nav-item');
+    function showPage(targetId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const page = document.getElementById(targetId);
+      if (page) page.classList.add('active');
+      navItems.forEach(n => {
+        const on = n.dataset.target === targetId;
+        n.classList.toggle('active', on);
+        n.classList.toggle('text-body', !on);
+      });
+      // 重新触发入场动画
+      document.querySelectorAll('#' + targetId + ' .reveal').forEach((el, i) => {
+        el.classList.remove('in');
+        setTimeout(() => el.classList.add('in'), 60 + i * 90);
+      });
+      document.getElementById('main-scroll').scrollTop = 0;
+    }
+    navItems.forEach(n => n.addEventListener('click', () => showPage(n.dataset.target)));
+
+    /* ---------- 滚动入场观察 ---------- */
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+    }, { threshold: 0.12, root: document.getElementById('main-scroll') });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    /* ---------- 鼠标跟随水彩流体 ---------- */
+    const blob = document.getElementById('fluidBlob');
+    window.addEventListener('pointermove', e => {
+      blob.style.left = e.clientX + 'px';
+      blob.style.top  = e.clientY + 'px';
+    });
+
+    /* ---------- 控制面板 折叠/展开 ---------- */
+    const panelBody = document.getElementById('panelBody');
+    document.getElementById('panelToggle').addEventListener('click', () => panelBody.classList.toggle('hidden'));
+    document.getElementById('panelClose').addEventListener('click', () => panelBody.classList.add('hidden'));
+
+    /* ---------- 油画肌理强度 ---------- */
+    const texture = document.getElementById('texture'), texLabel = document.getElementById('texLabel');
+    function applyTexture(v) { root.style.setProperty('--texture-strength', v); texLabel.textContent = v; texture.value = v; }
+    texture.addEventListener('input', () => { applyTexture(texture.value); settings.texture = texture.value; saveSettings(); });
+    applyTexture(settings.texture ?? 45);
+
+    /* ---------- 柔光开关 ---------- */
+    const softBtn = document.getElementById('softlightBtn'), softKnob = document.getElementById('softlightKnob');
+    function applySoftlight(on) {
+      root.style.setProperty('--softlight', on ? 1 : 0);
+      softBtn.setAttribute('aria-checked', on);
+      softBtn.style.background = on ? '#7A8FA6' : 'rgba(122,143,166,0.3)';
+      softKnob.style.transform = on ? 'translateX(24px)' : 'translateX(0)';
+    }
+    softBtn.addEventListener('click', () => { const on = softBtn.getAttribute('aria-checked') !== 'true'; applySoftlight(on); settings.softlight = on; saveSettings(); });
+    applySoftlight(settings.softlight ?? false);
+
+    /* ---------- 白噪音（阶段4完整逻辑，此处基础接入） ---------- */
+    const audios = { rain: document.getElementById('audio-rain'), cafe: document.getElementById('audio-cafe') };
+    const volume = document.getElementById('volume'), volLabel = document.getElementById('volLabel');
+    const noiseBtns = document.querySelectorAll('.noise-btn');
+    let currentNoise = settings.noise || 'rain';
+    let isMuted = settings.muted ?? true;
+
+    function highlightNoise() {
+      noiseBtns.forEach(b => {
+        const on = b.dataset.noise === currentNoise;
+        b.style.background = on ? 'rgba(122,143,166,0.18)' : 'transparent';
+        b.style.borderColor = on ? '#7A8FA6' : 'rgba(122,143,166,0.4)';
+        b.style.color = on ? '#7A8FA6' : '#595F66';
+      });
+    }
+    function applyVolume() {
+      const v = isMuted ? 0 : (Number(volume.value) / 100);
+      Object.values(audios).forEach(a => a.volume = 0);
+      if (!isMuted && Number(volume.value) > 0) {
+        audios[currentNoise].volume = v;
+        audios[currentNoise].play().catch(() => {});
+      }
+      volLabel.textContent = isMuted ? 0 : volume.value;
+    }
+    noiseBtns.forEach(b => b.addEventListener('click', () => {
+      Object.values(audios).forEach(a => a.pause());
+      currentNoise = b.dataset.noise; settings.noise = currentNoise; saveSettings();
+      highlightNoise(); applyVolume();
+    }));
+    volume.addEventListener('input', () => { if (Number(volume.value) > 0) isMuted = false; settings.volume = volume.value; settings.muted = isMuted; saveSettings(); applyVolume(); });
+    document.getElementById('muteBtn').addEventListener('click', () => { isMuted = !isMuted; settings.muted = isMuted; saveSettings(); applyVolume(); });
+
+    volume.value = settings.volume ?? 0;
+    highlightNoise();
+    applyVolume();
+
+    /* =========================================================
+       页面一 · Tab 过滤
+    ========================================================= */
+    const p1Tabs = document.querySelectorAll('.p1-tab');
+    const p1Cards = document.querySelectorAll('.p1-card');
+    function setP1Tab(tab) {
+      p1Tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      p1Cards.forEach(c => {
+        const show = tab === 'all' || c.dataset.card === tab;
+        c.classList.toggle('dimmed', !show);
+      });
+    }
+    p1Tabs.forEach(t => t.addEventListener('click', () => setP1Tab(t.dataset.tab)));
+    setP1Tab('all');
+
+    /* =========================================================
+       页面二 · 作品轮播逻辑
+    ========================================================= */
+    const carouselData = [
+      {
+        src: 'works/korean-review.png',
+        badge: '旗舰项目 · 线上可访问',
+        name: '韩语学习工作台',
+        desc: '全离线单文件 1.28 MB · 5 个功能模块 · 634 项自动化测试全绿',
+        url: 'https://korean-workbench-58484.app.workbuddy.host',
+      },
+      {
+        src: 'works/ai-radar.png',
+        badge: '线上可访问',
+        name: 'AI 热点追踪器',
+        desc: '单页 32KB：热度榜 + 可持久化评论 + 事件月历 + 8 个信息源筛选',
+        url: 'https://ai-radar-tracker.app.workbuddy.host',
+      },
+      {
+        src: 'works/growth-nav.png',
+        badge: '线上可访问',
+        name: '拉新活动体验导航',
+        desc: '20 个海内外电商拉新活动的可检索案例站 —— 它本身就是我在减龄做竞品调研的产物',
+        url: 'https://uriah-pixel.github.io/growth-experience-navigation',
+      },
+      {
+        src: 'works/resume-studio.png',
+        badge: '可现场演示 · 未公网部署',
+        name: '简历工作室 + JD 体检面板',
+        desc: '11 类岗位家族自动判定 / JD 关键词三档捕捉 / 一键深改 diff / STAR 四格自检',
+        url: '',
+      },
+      {
+        src: 'works/learn-diary.png',
+        badge: '可现场演示 · 未公网部署',
+        name: '「今天又学了些什么」+ 时间管理器',
+        desc: '本地优先的个人信息源管理：离线随手记、离线也能加字段、飞书单向同步桥、目标排期 + 任务切块 + 时间预算',
+        url: '',
+      },
+      {
+        src: 'works/dashboard.png',
+        badge: 'AI × 业务 · 演示数据',
+        name: '内容渠道数据看板',
+        desc: '先把底表建对，再谈可视化：六个频道可切、周 / 累计可切、来源可追溯（虚构演示数据，不联网）',
+        url: '',
+      },
+      {
+        type: 'text',
+        title: '其他常用 AI 工具',
+        tools: [
+          { name: 'Chat GPT' },
+          { name: 'Claude' },
+          { name: 'Gemini' },
+          { name: 'Runway' },
+          { name: 'Tabbit' },
+          { name: 'WorkBuddy' },
+          { name: 'trae', note: '此网页由trae、豆包、V0.dev共同完成' },
+        ],
+      },
+    ];
+
+    let carouselInitialized = false;
+    let currentSlide = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    function initCarousel() {
+      if (carouselInitialized) return;
+      carouselInitialized = true;
+
+      const track = document.getElementById('carouselTrack');
+      const dots = document.getElementById('carouselDots');
+      const counter = document.getElementById('carouselCounter');
+      const captionBadge = document.getElementById('captionBadge');
+      const captionName = document.getElementById('captionName');
+      const captionDesc = document.getElementById('captionDesc');
+      const captionLink = document.getElementById('captionLink');
+      const prevBtn = document.getElementById('carouselPrev');
+      const nextBtn = document.getElementById('carouselNext');
+
+      track.innerHTML = carouselData.map((item, i) => {
+        if (item.type === 'text') {
+          const toolsHtml = item.tools.map(t => {
+            const noteHtml = t.note ? `<span class="tool-note">（${t.note}）</span>` : '';
+            return `
+              <div class="text-slide-tool"><span class="check">√</span><span>${t.name}</span>${noteHtml}</div>
+            `;
+          }).join('');
+          return `
+            <div class="carousel-slide text-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+              <div class="text-slide-content">
+                <div class="text-slide-title">${item.title}</div>
+                <div class="text-slide-tools">${toolsHtml}</div>
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="carousel-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+            <img src="${item.src}" alt="${item.name}" loading="lazy" />
+          </div>
+        `;
+      }).join('');
+
+      dots.innerHTML = carouselData.map((_, i) => `
+        <span class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>
+      `).join('');
+
+      function updateCarousel(index) {
+        currentSlide = index;
+        track.style.transform = `translateX(-${index * 100}%)`;
+
+        document.querySelectorAll('.carousel-slide').forEach((el, i) => {
+          el.classList.toggle('active', i === index);
+        });
+
+        document.querySelectorAll('.carousel-dot').forEach((el, i) => {
+          el.classList.toggle('active', i === index);
+        });
+
+        counter.textContent = `${index + 1} / ${carouselData.length}`;
+
+        const item = carouselData[index];
+        const captionEl = document.getElementById('carouselCaption');
+        if (item.type === 'text') {
+          captionEl.style.display = 'none';
+        } else {
+          captionEl.style.display = 'block';
+          captionBadge.textContent = item.badge || '';
+          captionName.textContent = item.name;
+          captionDesc.textContent = item.desc;
+          if (item.url) {
+            captionLink.href = item.url;
+            captionLink.textContent = '打开作品 ↗';
+            captionLink.target = '_blank';
+            captionLink.style.display = 'inline-flex';
+          } else {
+            captionLink.style.display = 'none';
+          }
+        }
+      }
+
+      function nextSlide() {
+        const next = (currentSlide + 1) % carouselData.length;
+        updateCarousel(next);
+      }
+
+      function prevSlide() {
+        const prev = (currentSlide - 1 + carouselData.length) % carouselData.length;
+        updateCarousel(prev);
+      }
+
+      prevBtn.addEventListener('click', prevSlide);
+      nextBtn.addEventListener('click', nextSlide);
+
+      dots.addEventListener('click', (e) => {
+        const dot = e.target.closest('.carousel-dot');
+        if (dot) {
+          updateCarousel(Number(dot.dataset.index));
+        }
+      });
+
+      track.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      track.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) nextSlide();
+          else prevSlide();
+        }
+      }, { passive: true });
+
+      document.addEventListener('keydown', (e) => {
+        if (document.getElementById('page-2').classList.contains('active')) {
+          if (e.key === 'ArrowLeft') prevSlide();
+          if (e.key === 'ArrowRight') nextSlide();
+        }
+      });
+
+      updateCarousel(0);
+    }
+
+    function animateCarousel() {
+      if (!carouselInitialized) initCarousel();
+    }
+
+    // 切到页面二时初始化轮播
+    const _origShowPage = showPage;
+    showPage = function(id) {
+      _origShowPage(id);
+      if (id === 'page-2') setTimeout(animateCarousel, 200);
+    };
+
+    /* 首屏入场 */
+    showPage('page-1');
+  </script>
+</body>
+</html>
